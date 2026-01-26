@@ -202,7 +202,7 @@ export function Header() {
                   <Button variant="ghost" size="sm" className="hidden sm:inline-flex rounded-full">Sign In</Button>
                 </Link>
                 <Link href="/signup">
-                  <Button size="sm" className="rounded-full">Get Started</Button>
+                  <Button size="sm" className="rounded-full">Let's Go!</Button>
                 </Link>
               </div>
             )}
@@ -271,3 +271,4 @@ export function Header() {
     </header>
   )
 }
+
