@@ -1,5 +1,6 @@
+// Updated for Supabase
 import crypto from 'crypto';
-import { db } from '../db_connection';
+import { supabaseAdmin as supabase } from '../supabase';
 
 /**
  * Generates a random 16-digit team URL
@@ -15,18 +16,18 @@ export async function generateTeamUrl(): Promise<string> {
     teamUrl = randomNumber.toString();
 
     // Check if this URL already exists in the database
-    const [rows]: any = await db.promise().query(
-      'SELECT team_url FROM team WHERE team_url = ?',
-      [teamUrl]
-    );
+    const { data: existingTeam } = await supabase
+      .from('teams')
+      .select('team_url')
+      .eq('team_url', teamUrl)
+      .single();
 
-    if (rows.length === 0) {
+    if (!existingTeam) {
       isUnique = true;
       return teamUrl;
     }
   }
 
-  // This should never be reached, but TypeScript requires a return
   throw new Error('Failed to generate unique team URL');
 }
 
@@ -44,12 +45,13 @@ export async function generateProjectUrl(): Promise<string> {
     projectUrl = randomNumber.toString();
 
     // Check if this URL already exists in the database
-    const [rows]: any = await db.promise().query(
-      'SELECT project_url FROM project WHERE project_url = ?',
-      [projectUrl]
-    );
+    const { data: existingProject } = await supabase
+      .from('projects')
+      .select('project_url')
+      .eq('project_url', projectUrl)
+      .single();
 
-    if (rows.length === 0) {
+    if (!existingProject) {
       isUnique = true;
       return projectUrl;
     }
