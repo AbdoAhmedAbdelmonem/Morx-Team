@@ -21,6 +21,7 @@
     :root {
         --font-sans: var(--font-outfit), var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
         --font-mono: var(--font-geist-mono);
+        --font-rubik: var(--font-rubik), sans-serif;
         --font-outfit: var(--font-outfit), sans-serif;
         --background: 0 0% 100%;
         --foreground: 180 5% 10%;
@@ -277,5 +278,6 @@
     color: hsl(var(--destructive)) !important;
     border-color: hsl(var(--destructive) / 0.2) !important;
 }
+
 
 
