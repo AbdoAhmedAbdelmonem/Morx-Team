@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       .insert({
         team_id,
         auth_user_id: target_auth_user_id,
-        inviter_auth_user_id: inviterAuthUserId,
+        inviter_id: inviterAuthUserId,
         message: message || '',
         status: 'pending'
       })
