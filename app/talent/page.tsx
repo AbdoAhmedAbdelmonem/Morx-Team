@@ -88,7 +88,7 @@ export default function TalentMarketplace() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           team_id: parseInt(selectedTeam),
-          auth_user_id: selectedUser.auth_user_id,
+          target_auth_user_id: selectedUser.auth_user_id,
           inviter_id: user.auth_user_id,
           message: inviteMessage
         })
