@@ -76,7 +76,13 @@ export function Header() {
         <div className="pointer-events-auto h-16 rounded-full border border-border/40 backdrop-blur-xl bg-background/20">
           <div className="container flex h-full items-center justify-between px-6">
             <Link href="/" className="flex items-center gap-2 font-bold focus:outline-none">
-              <Image src="/Morx.png" alt="Morx" width={40} height={40} className="size-10" />
+              <Image 
+                src={theme === "light" ? "/Morx-dark.png" : "/Morx.png"} 
+                alt="Morx" 
+                width={40} 
+                height={40} 
+                className="size-10" 
+              />
               <span className="text-xl rock-salt">Morx</span>
             </Link>
             <div className="flex items-center gap-4">
@@ -100,7 +106,7 @@ export function Header() {
         <div className="container flex h-full items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2 font-bold group focus:outline-none">
             <Image 
-              src="/Morx.png" 
+              src={theme === "light" ? "/Morx-dark.png" : "/Morx.png"} 
               alt="Morx" 
               width={40} 
               height={40} 
@@ -271,4 +277,3 @@ export function Header() {
     </header>
   )
 }
-
