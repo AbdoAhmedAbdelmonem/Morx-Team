@@ -90,7 +90,7 @@ export default function InvitationsHub() {
         <div className="container px-4 md:px-6 max-w-5xl">
           <div className="mb-10">
             <h1 className="text-4xl font-extrabold tracking-tight mb-3 rock-salt text-primary">Invitations Hub</h1>
-            <p className="text-muted-foreground text-lg text-arabic">طلبات الانضمام للفرق في مكان واحد</p>
+            <p className="text-muted-foreground text-lg text-arabic">Team Joining Requests in one a Place</p>
           </div>
 
           {loading ? (
@@ -224,3 +224,4 @@ export default function InvitationsHub() {
     </div>
   )
 }
+
