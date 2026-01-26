@@ -80,7 +80,7 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="flex flex-col gap-4 sm:flex-row justify-between items-end border-t border-border/20 pt-8">
+        <div className="flex flex-col gap-4 sm:flex-row justify-between items-start border-t border-border/20 pt-8">
           <div className="flex flex-col gap-1">
             <p className="text-xs text-muted-foreground font-medium">
                 &copy; {new Date().getFullYear()} Morx. All rights reserved.
