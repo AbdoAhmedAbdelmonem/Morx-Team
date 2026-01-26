@@ -119,7 +119,6 @@ export function Header() {
             {isAuthenticated ? (
               <>
                 <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Home</Link>
-                <Link href="/reports" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Reports</Link>
                 <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Teams</Link>
                 <Link href="/templates" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Templates</Link>
                 <Link href="/talent" className="text-sm font-medium text-primary font-bold transition-colors hover:text-primary/80 animate-pulse">Marketplace</Link>
@@ -277,3 +276,4 @@ export function Header() {
     </header>
   )
 }
+
