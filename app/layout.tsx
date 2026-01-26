@@ -13,12 +13,12 @@ const outfit = Outfit({
   variable: "--font-outfit",
   display: "swap",
 })
-
 const rubik = Rubik({ 
-  subsets: ["latin", "arabic"],
-  variable: "--font-rubik" 
+  subsets: ["latin", "arabic"], 
+  variable: "--font-rubik",
+  weight: "variable",
+  display: "swap"
 })
-
 const rockSalt = Rock_Salt({ 
   weight: "400",
   subsets: ["latin"],
@@ -28,7 +28,7 @@ const rockSalt = Rock_Salt({
 export const metadata: Metadata = {
   title: "Morx - Reports and Statistics",
   description: "Advanced reports and statistics platform for data-driven decisions.",
-  generator: 'MorxCorp'
+  generator: 'Morx Team'
 }
 
 export default function RootLayout({
