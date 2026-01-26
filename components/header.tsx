@@ -240,7 +240,6 @@ export function Header() {
                   </div>
                 </div>
                 <Link href="/" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-                <Link href="/reports" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Reports</Link>
                 <Link href="/teams" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Teams</Link>
                 <Link href="/templates" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Templates</Link>
                 <Link href="/talent" className="block text-sm font-medium py-2 text-primary font-bold" onClick={() => setMobileMenuOpen(false)}>Marketplace</Link>
@@ -266,7 +265,7 @@ export function Header() {
                   <Button variant="outline" className="w-full rounded-full mt-2">Sign In</Button>
                 </Link>
                 <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full rounded-full">Get Started</Button>
+                  <Button className="w-full rounded-full">Let's Start</Button>
                 </Link>
               </div>
             )}
@@ -276,4 +275,5 @@ export function Header() {
     </header>
   )
 }
+
 
