@@ -664,7 +664,7 @@ export default function TeamSettingsPage() {
               <CardContent>
                 <div className="space-y-3">
                   {members.map((member) => (
-                    <div key={member.user_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div key={member.user_id} className="flex items-center flex-col justify-between p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-4">
                         <Avatar className="size-10">
                           {member.profile_image && (
@@ -687,7 +687,7 @@ export default function TeamSettingsPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-start gap-3">
+                      <div className="flex items-center gap-3">
                         {/* Role selector - Only Owner can change roles, not their own */}
                         {isOwner && member.role !== 'owner' && member.auth_user_id !== user?.auth_user_id ? (
                           <Select
