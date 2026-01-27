@@ -687,7 +687,7 @@ export default function TeamSettingsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-start gap-3">
                         {/* Role selector - Only Owner can change roles, not their own */}
                         {isOwner && member.role !== 'owner' && member.auth_user_id !== user?.auth_user_id ? (
                           <Select
