@@ -138,7 +138,13 @@ export default function LandingPage() {
             >
               <div className="rounded-xl overflow-hidden shadow-2xl border border-border/40 bg-gradient-to-b from-background to-muted/20">
                 <div className="relative w-full aspect-video">
-                  <img src=".\Blue and White Illustration Build a Business Team Presentation.png" alt="" />
+                  <video 
+                    src="https://res.cloudinary.com/dv6rj0dgj/video/upload/v1769621472/InShot_20260128_170733371_fewuj1.mp4" 
+                    controls
+                    className="w-full h-full object-cover"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
                 </div>
                 <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10 dark:ring-white/10 pointer-events-none"></div>
               </div>
