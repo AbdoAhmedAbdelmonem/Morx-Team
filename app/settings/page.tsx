@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTheme } from "next-themes"
 import { useColorTheme } from "@/components/color-theme-provider"
 import { useAuth } from "@/contexts/auth-context"
-import { User, CreditCard, Palette, Shield, ChevronRight, Check } from "lucide-react"
+import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop } from "lucide-react"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { toast } from "sonner"
@@ -287,9 +287,9 @@ export default function SettingsPage() {
 
 
   const themeOptions = [
-    { value: "light", label: "Light", icon: "☀️" },
-    { value: "dark", label: "Dark", icon: "🌙" },
-    { value: "system", label: "System", icon: "💻" }
+    { value: "light", label: "Light", icon: <Sun className="size-8" /> },
+    { value: "dark", label: "Dark", icon: <Moon className="size-8" /> },
+    { value: "system", label: "System", icon: <Laptop className="size-8" /> }
   ]
 
   return (
@@ -763,7 +763,7 @@ export default function SettingsPage() {
                         }`}
                       >
                         <div className="flex flex-col items-center gap-2">
-                          <span className="text-4xl">{option.icon}</span>
+                          <span className="mb-2">{option.icon}</span>
                           <span className="font-medium">{option.label}</span>
                         </div>
                         {theme === option.value && (
