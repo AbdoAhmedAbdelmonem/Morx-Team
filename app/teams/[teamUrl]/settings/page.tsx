@@ -26,6 +26,8 @@ import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Trash2, Crown, Shield, User, Globe, Lock, Check, X, Copy, LogOut, Users, Settings2, GraduationCap, MoreVertical } from "lucide-react"
 import { FCDS_SUBJECTS, TEAM_PURPOSES } from "@/lib/constants/subjects"
 
+import SignupRequired from "@/components/signup-required"
+
 export default function TeamSettingsPage() {
   const router = useRouter()
   const params = useParams()
@@ -58,6 +60,8 @@ export default function TeamSettingsPage() {
         ...userData,
         auth_user_id: userData.auth_user_id || userData.id
       })
+    } else {
+      setIsLoading(false)
     }
   }, [])
 
@@ -322,7 +326,7 @@ export default function TeamSettingsPage() {
     return "bg-gray-100 text-gray-800"
   }
 
-  if (isLoading || !user) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
@@ -335,6 +339,10 @@ export default function TeamSettingsPage() {
         <Footer />
       </div>
     )
+  }
+
+  if (!user) {
+    return <SignupRequired />
   }
 
   const isOwnerOrAdmin = team?.role === 'owner' || team?.role === 'admin'
