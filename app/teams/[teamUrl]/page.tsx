@@ -45,6 +45,25 @@ export default function TeamDetailPage() {
   const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false)
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
   const [selectedProjectForTemplate, setSelectedProjectForTemplate] = useState<{project_id: number, project_name: string} | null>(null)
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
+
+  useEffect(() => {
+    if (team && (team.role === 'owner' || team.role === 'admin')) {
+      fetchPendingRequests()
+    }
+  }, [team])
+
+  const fetchPendingRequests = async () => {
+    try {
+      const res = await fetch(`/api/teams/${teamUrl}/requests`)
+      const result = await res.json()
+      if (result.success && Array.isArray(result.data)) {
+        setPendingRequestsCount(result.data.length)
+      }
+    } catch (error) {
+      console.error('Error fetching pending requests:', error)
+    }
+  }
 
   useEffect(() => {
     const storedSession = localStorage.getItem('student_session')
@@ -402,14 +421,21 @@ export default function TeamDetailPage() {
                 >
                   <BarChart3 className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
                 </Button>
+
+
                 <Button
                   variant="outline"
                   onClick={() => router.push(`/teams/${teamUrl}/settings`)}
-                  className="h-9 text-xs sm:text-sm flex-1 lg:flex-none"
+                  className="h-9 text-xs sm:text-sm flex-1 lg:flex-none relative"
                   size="sm"
                 >
                   <Settings className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
                   <span className="hidden sm:inline">Settings</span>
+                  {pendingRequestsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 size-3 bg-red-500 rounded-full border border-background flex items-center justify-center">
+                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    </span>
+                  )}
                 </Button>
                 <Button
                   variant="outline"
