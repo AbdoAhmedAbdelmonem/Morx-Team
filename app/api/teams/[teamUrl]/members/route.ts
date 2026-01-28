@@ -189,6 +189,87 @@ export async function POST(
 }
 
 /**
+ * Update member role (owner only)
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { teamUrl: string } }
+) {
+  const user = await requireAuth(request);
+  if (user instanceof NextResponse) return user;
+
+  try {
+    const body = await request.json();
+    const { auth_user_id: targetUserId, new_role } = body;
+    const authUserId = user.id;
+    const { teamUrl } = params;
+
+    if (!targetUserId || !new_role) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'auth_user_id and new_role are required' },
+        { status: 400 }
+      );
+    }
+
+    if (!['admin', 'member'].includes(new_role)) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Invalid role' },
+        { status: 400 }
+      );
+    }
+
+    // Get team
+    const { data: team } = await supabase
+      .from('teams')
+      .select('team_id')
+      .eq('team_url', teamUrl)
+      .single();
+
+    if (!team) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Team not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check requester permissions (Owner only)
+    const { data: requesterMembership } = await supabase
+      .from('team_members')
+      .select('role')
+      .eq('team_id', team.team_id)
+      .eq('auth_user_id', authUserId)
+      .single();
+
+    if (!requesterMembership || requesterMembership.role !== 'owner') {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Only owners can change member roles' },
+        { status: 403 }
+      );
+    }
+
+    // Update member role
+    const { error } = await supabase
+      .from('team_members')
+      .update({ role: new_role })
+      .eq('team_id', team.team_id)
+      .eq('auth_user_id', targetUserId);
+
+    if (error) throw error;
+
+    return NextResponse.json<ApiResponse>({
+      success: true,
+      message: 'Member role updated successfully',
+    });
+  } catch (error) {
+    console.error('Update member role error:', error);
+    return NextResponse.json<ApiResponse>(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * Remove member from team
  */
 export async function DELETE(
@@ -226,6 +307,7 @@ export async function DELETE(
     }
 
     // Check requester permissions
+    // Allow if owner/admin OR if removing self (leaving team)
     const { data: membership } = await supabase
       .from('team_members')
       .select('role')
@@ -233,9 +315,11 @@ export async function DELETE(
       .eq('auth_user_id', authUserId)
       .single();
 
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    const isSelfRemoval = authUserId === targetAuthUserId;
+
+    if (!membership || (!isSelfRemoval && membership.role !== 'owner' && membership.role !== 'admin')) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Only owners and admins can remove members' },
+        { success: false, error: 'Only owners and admins can remove other members' },
         { status: 403 }
       );
     }
