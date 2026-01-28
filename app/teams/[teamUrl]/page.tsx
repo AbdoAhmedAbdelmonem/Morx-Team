@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import TemplateLibrary from "@/components/template-library"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { toast } from "sonner"
+import SignupRequired from "@/components/signup-required"
 
 export default function TeamDetailPage() {
   const router = useRouter()
@@ -69,6 +70,8 @@ export default function TeamDetailPage() {
     const storedSession = localStorage.getItem('student_session')
     if (storedSession) {
       setUser(JSON.parse(storedSession))
+    } else {
+      setIsLoading(false)
     }
   }, [])
 
@@ -308,31 +311,7 @@ export default function TeamDetailPage() {
 
   // Login required
   if (!user) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center bg-background">
-          <div className="text-center px-4 max-w-md">
-            <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="size-10 text-primary" />
-            </div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-3">Login Required</h1>
-            <p className="text-muted-foreground mb-6">
-              You need to be logged in to access teams and projects. Please sign in to continue.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={() => router.push('/signin')} size="lg" className="w-full sm:w-auto">
-                Sign In
-              </Button>
-              <Button onClick={() => router.push('/signup')} variant="outline" size="lg" className="w-full sm:w-auto">
-                Create Account
-              </Button>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    )
+    return <SignupRequired />
   }
 
   // Unauthorized access
