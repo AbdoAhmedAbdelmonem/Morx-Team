@@ -221,7 +221,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate team URL if not provided
-    const finalTeamUrl = team_url || team_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const generateRandomString = (length: number) => {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    };
+
+    const finalTeamUrl = team_url || generateRandomString(16);
 
     // Check if team URL already exists
     const { data: existingTeam } = await supabase
