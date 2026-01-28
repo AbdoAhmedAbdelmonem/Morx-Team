@@ -13,9 +13,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Trash2, Crown, Shield, User, Globe, Lock, Check, X, Copy, LogOut, Users, Settings2, GraduationCap } from "lucide-react"
+import { ArrowLeft, Trash2, Crown, Shield, User, Globe, Lock, Check, X, Copy, LogOut, Users, Settings2, GraduationCap, MoreVertical } from "lucide-react"
 import { FCDS_SUBJECTS, TEAM_PURPOSES } from "@/lib/constants/subjects"
 
 export default function TeamSettingsPage() {
@@ -112,7 +120,7 @@ export default function TeamSettingsPage() {
     if (!confirm(`Remove ${userName} from the team?`)) return
     
     try {
-      const res = await fetch(`/api/teams/${teamUrl}/members?auth_user_id=${userId}`, {
+      const res = await fetch(`/api/teams/${teamUrl}/members?target_auth_user_id=${userId}`, {
         method: 'DELETE'
       })
       
@@ -249,7 +257,7 @@ export default function TeamSettingsPage() {
   const handleRequestAction = async (requestId: number, action: 'approve' | 'decline') => {
     try {
       const res = await fetch(`/api/teams/${teamUrl}/requests`, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           auth_user_id: user?.auth_user_id,
@@ -276,7 +284,8 @@ export default function TeamSettingsPage() {
 
   const handleLeaveTeam = async () => {
     try {
-      const res = await fetch(`/api/teams/${teamUrl}/members`, {
+      if (!user?.auth_user_id) return
+      const res = await fetch(`/api/teams/${teamUrl}/members?target_auth_user_id=${user.auth_user_id}`, {
         method: 'DELETE'
       })
       
@@ -664,9 +673,9 @@ export default function TeamSettingsPage() {
               <CardContent>
                 <div className="space-y-3">
                   {members.map((member) => (
-                    <div key={member.user_id} className="flex items-start flex-col justify-between p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="size-10">
+                    <div key={member.auth_user_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        <Avatar className="size-10 shrink-0">
                           {member.profile_image && (
                             <AvatarImage src={member.profile_image} alt={member.first_name} />
                           )}
@@ -674,55 +683,77 @@ export default function TeamSettingsPage() {
                             {member.first_name?.[0]}{member.last_name?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <div className="font-medium flex items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium flex items-center gap-2 truncate">
                             {member.first_name} {member.last_name}
                             {member.auth_user_id === user?.auth_user_id && (
-                              <Badge variant="outline" className="text-xs">You</Badge>
+                              <Badge variant="outline" className="text-xs shrink-0">You</Badge>
                             )}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm text-muted-foreground truncate">
                             {member.email}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        {/* Role selector - Only Owner can change roles, not their own */}
-                        {isOwner && member.role !== 'owner' && member.auth_user_id !== user?.auth_user_id ? (
-                          <Select
-                            value={member.role}
-                            onValueChange={(value) => handleChangeRole(member.auth_user_id, value)}
-                          >
-                            <SelectTrigger className="w-32">
-                              <div className="flex items-center gap-2">
-                                {getRoleIcon(member.role)}
-                                <SelectValue />
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="member">Member</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Badge className={getRoleBadgeColor(member.role)}>
-                            <span className="flex items-center gap-1">
-                              {getRoleIcon(member.role)}
-                              {member.role}
-                            </span>
-                          </Badge>
-                        )}
+                      <div className="flex items-center gap-3 shrink-0 ml-4">
+                        <Badge className={getRoleBadgeColor(member.role)}>
+                          <span className="flex items-center gap-1">
+                            {getRoleIcon(member.role)}
+                            {member.role}
+                          </span>
+                        </Badge>
 
-                        {/* Remove button - Admin/Owner can remove non-owners, not themselves */}
+                        {/* Actions Dropdown - Only for non-owners and not self */}
                         {isOwnerOrAdmin && member.role !== 'owner' && member.auth_user_id !== user?.auth_user_id && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveMember(member.auth_user_id, `${member.first_name}${member.last_name ? ' ' + member.last_name : ''}`)}
-                          >
-                            <Trash2 className="size-4 text-destructive" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="size-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem
+                                onClick={() => navigator.clipboard.writeText(member.email)}
+                              >
+                                <Copy className="mr-2 size-4" />
+                                Copy Email
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              
+                              {/* Role Management - Owner Only */}
+                              {isOwner && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() => handleChangeRole(member.auth_user_id, member.role === 'admin' ? 'member' : 'admin')}
+                                  >
+                                    {member.role === 'admin' ? (
+                                      <>
+                                        <User className="mr-2 size-4" />
+                                        Demote to Member
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Shield className="mr-2 size-4" />
+                                        Promote to Admin
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                </>
+                              )}
+
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600"
+                                onClick={() => handleRemoveMember(member.auth_user_id, `${member.first_name}${member.last_name ? ' ' + member.last_name : ''}`)}
+                              >
+                                <Trash2 className="mr-2 size-4" />
+                                Remove Member
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </div>
                     </div>
