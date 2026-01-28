@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Trash2, Crown, Shield, User, Globe, Lock, Check, X, Copy, LogOut, Users, Settings2, GraduationCap, MoreVertical } from "lucide-react"
+import { ArrowLeft, Trash2, Crown, Shield, User, Globe, Lock, Check, X, Copy, LogOut, Users, Settings2, GraduationCap, MoreVertical, BarChart3, Plus } from "lucide-react"
 import { FCDS_SUBJECTS, TEAM_PURPOSES } from "@/lib/constants/subjects"
 
 import SignupRequired from "@/components/signup-required"
@@ -50,6 +50,16 @@ export default function TeamSettingsPage() {
   const [purpose, setPurpose] = useState("")
   const [subject, setSubject] = useState("")
   const [isUpdatingSpecialized, setIsUpdatingSpecialized] = useState(false)
+  const [skills, setSkills] = useState<string[]>([])
+  const [newSkill, setNewSkill] = useState("")
+  const [isUpdatingSkills, setIsUpdatingSkills] = useState(false)
+
+  // Load skills from team tags
+  useEffect(() => {
+    if (team?.required_skills && Array.isArray(team.required_skills)) {
+      setSkills(team.required_skills)
+    }
+  }, [team])
 
   useEffect(() => {
     const storedSession = localStorage.getItem('student_session')
@@ -238,7 +248,7 @@ export default function TeamSettingsPage() {
           team_type: teamType,
           purpose: purpose || "",
           subject: subject || "",
-          tags: subject ? [subject, purpose] : (purpose ? [purpose] : [])
+          tags: subject ? [subject, purpose] : (purpose ? [purpose] : []) // Re-enabled automatic tags
         })
       })
       
@@ -256,6 +266,47 @@ export default function TeamSettingsPage() {
     } finally {
       setIsUpdatingSpecialized(false)
     }
+  }
+
+  const handleUpdateSkills = async () => {
+    if (!team) return
+    setIsUpdatingSkills(true)
+
+    try {
+      const res = await fetch(`/api/teams/${teamUrl}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auth_user_id: user?.auth_user_id,
+          required_skills: skills
+        })
+      })
+
+      const result = await res.json()
+
+      if (result.success) {
+        setTeam({ ...team, required_skills: skills })
+        alert('Skills updated successfully')
+      } else {
+        alert(result.error || 'Failed to update skills')
+      }
+    } catch (error) {
+       console.error('Error updating skills:', error)
+       alert('An error occurred. Please try again.')
+    } finally {
+      setIsUpdatingSkills(false)
+    }
+  }
+
+  const handleAddSkill = () => {
+    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+      setSkills([...skills, newSkill.trim()])
+      setNewSkill("")
+    }
+  }
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove))
   }
 
   const handleRequestAction = async (requestId: number, action: 'approve' | 'decline') => {
@@ -345,10 +396,10 @@ export default function TeamSettingsPage() {
     return <SignupRequired />
   }
 
-  const isOwnerOrAdmin = team?.role === 'owner' || team?.role === 'admin'
-  const isOwner = team?.role === 'owner'
-  const pendingRequests = joinRequests.filter(r => r.status === 'pending')
-  const currentUserMember = members.find(m => m.auth_user_id === user?.auth_user_id)
+  const isOwnerOrAdmin = team?.role === 'owner' || team?.role === 'admin';
+  const isOwner = team?.role === 'owner';
+  const pendingRequests = joinRequests.filter(r => r.status === 'pending');
+  const currentUserMember = members.find(m => m.auth_user_id === user?.auth_user_id);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -440,13 +491,24 @@ export default function TeamSettingsPage() {
                     </div>
                   </div>
 
-                  <Separator className="my-6" />
+                </CardContent>
+              </Card>
+            )}
 
+            {/* Specialized Settings Card - Admin/Owner Only */}
+            {isOwnerOrAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GraduationCap className="size-5 text-purple-500" />
+                    Specialized Settings
+                  </CardTitle>
+                  <CardDescription>
+                    Define your team's type and purpose
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium flex items-center gap-2">
-                      <Settings2 className="size-4" />
-                      Specialized Configuration
-                    </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -543,6 +605,70 @@ export default function TeamSettingsPage() {
                         disabled={isUpdatingSpecialized}
                       >
                         Save Specialized Settings
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Required Skills Card - Admin/Owner Only */}
+            {isOwnerOrAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="size-5 text-indigo-500" />
+                    Required Skills
+                  </CardTitle>
+                  <CardDescription>
+                    Add skills that are required or relevant for this team (e.g., React, Python, Design)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="Enter a skill..." 
+                        value={newSkill}
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddSkill();
+                          }
+                        }}
+                      />
+                      <Button onClick={handleAddSkill} variant="outline" size="icon">
+                        <Plus className="size-4" />
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 min-h-[40px] p-4 bg-muted/30 rounded-lg border border-dashed">
+                      {skills.length === 0 && (
+                        <p className="text-sm text-muted-foreground italic w-full text-center">No skills added yet</p>
+                      )}
+                      {skills.map((skill, index) => (
+                        <Badge key={index} variant="secondary" className="pl-3 pr-1 py-1 flex items-center gap-1">
+                          {skill}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="size-4 hover:bg-destructive/10 hover:text-destructive rounded-full"
+                            onClick={() => handleRemoveSkill(skill)}
+                          >
+                            <X className="size-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <Button 
+                        variant="secondary"
+                        onClick={handleUpdateSkills}
+                        disabled={isUpdatingSkills}
+                      >
+                        Save Skills
                       </Button>
                     </div>
                   </div>
