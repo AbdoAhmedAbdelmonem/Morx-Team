@@ -148,22 +148,7 @@ export async function POST(
       );
     }
 
-    // If public team, join directly
-    if (team.is_public) {
-      await supabase.from('team_members').insert({
-        auth_user_id: authUserId,
-        team_id: team.team_id,
-        role: 'member'
-      });
-
-      return NextResponse.json<ApiResponse>({
-        success: true,
-        message: `Successfully joined ${team.team_name}`,
-        data: { status: 'joined' },
-      });
-    }
-
-    // Private team - create join request
+    // Create join request (Required for all teams)
     const { data: newRequest, error: requestError } = await supabase
       .from('team_join_requests')
       .insert({
@@ -175,6 +160,43 @@ export async function POST(
       .single();
 
     if (requestError) throw requestError;
+
+    // Notify Team Owners and Admins
+    try {
+      // Get admins and owners
+      const { data: teamAdmins } = await supabase
+        .from('team_members')
+        .select('auth_user_id')
+        .eq('team_id', team.team_id)
+        .in('role', ['owner', 'admin']);
+
+      // Get requester details for the message
+      const { data: requester } = await supabase
+        .from('users')
+        .select('first_name, last_name')
+        .eq('auth_user_id', authUserId)
+        .single();
+
+      if (teamAdmins && teamAdmins.length > 0) {
+        const requesterName = requester 
+          ? `${requester.first_name} ${requester.last_name || ''}`.trim() 
+          : 'A user';
+
+        const notifications = teamAdmins.map(admin => ({
+          auth_user_id: admin.auth_user_id,
+          title: 'New Join Request',
+          message: `${requesterName} requested to join ${team.team_name}`,
+          type: 'team_join_request',
+          related_id: newRequest.request_id, // identifying the request
+          is_read: false
+        }));
+
+        await supabase.from('notifications').insert(notifications);
+      }
+    } catch (notifyError) {
+      // Don't block the response if notification fails, just log it
+      console.error('Failed to notify team admins of join request:', notifyError);
+    }
 
     return NextResponse.json<ApiResponse>({
       success: true,
