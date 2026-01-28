@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     if (publicOnly) {
       const { data: publicTeams, error: publicError } = await supabase
         .from('teams')
-        .select('team_id, team_name, team_url, created_at, created_by, is_public, description, team_type, purpose, subject, tags')
+        .select('team_id, team_name, team_url, created_at, created_by, is_public, description, team_type, purpose, subject, tags, required_skills')
         .eq('is_public', true)
         .order('created_at', { ascending: false });
 
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
 
     // Generate team URL if not provided
     const generateRandomString = (length: number) => {
-      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
       let result = '';
       for (let i = 0; i < length; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -288,4 +288,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
