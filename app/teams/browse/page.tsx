@@ -265,11 +265,11 @@ export default function BrowseTeamsPage() {
                       )}
                     </div>
 
-                    {team.required_skills && team.required_skills.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 pl-0.5">
-                          Requirements
-                        </p>
+                    <div className="mb-3">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 pl-0.5">
+                        Requirements
+                      </p>
+                      {team.required_skills && team.required_skills.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {team.required_skills.map((skill: string, i: number) => (
                             <Badge key={i} variant="outline" className="text-[10px] bg-blue-500/5 text-blue-600 border-blue-200">
@@ -277,9 +277,25 @@ export default function BrowseTeamsPage() {
                             </Badge>
                           ))}
                         </div>
-                      </div>
-                    )}
-                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-4 italic">
+                      ) : (
+                        <p className="text-xs text-muted-foreground opacity-70">
+                          {(() => {
+                            const msgs = [
+                              "Pulse check: Optional. 💗",
+                              "No skills? No problem. 🤷‍♂️",
+                              "Just bring good vibes. ✨",
+                              "Requirements: breathing (negotiable). 😮‍💨",
+                              "We have low standards. join us! 📉",
+                              "Too cool for requirements. 😎",
+                              "Ideally human, but we're flexible. 👽",
+                              "Buy us some coffee. ☕"
+                            ];
+                            return msgs[(team.team_name?.length || 0) % msgs.length];
+                          })()}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-4">
                       {team.description || "Too cool for descriptions, apparently. 🙄"}
                     </p>
                     <div className="flex items-center justify-between">
