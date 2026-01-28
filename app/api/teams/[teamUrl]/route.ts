@@ -20,7 +20,7 @@ export async function GET(
     // Get team
     const { data: team, error: teamError } = await supabase
       .from('teams')
-      .select('*')
+      .select('*, required_skills')
       .eq('team_url', teamUrl)
       .single();
 
@@ -94,13 +94,13 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { team_name, description, is_public, team_type, purpose, subject, tags } = body;
+    const { team_name, description, is_public, team_type, purpose, subject, tags, required_skills } = body;
     const authUserId = user.id;
     const { teamUrl } = params;
 
     console.log(`[Teams API PUT] Updating team ${teamUrl}`, { 
       authUserId, 
-      payload: { team_name, description, is_public, team_type, purpose, subject, tags } 
+      payload: { team_name, description, is_public, team_type, purpose, subject, tags, required_skills } 
     });
 
     // Get team
@@ -145,6 +145,7 @@ export async function PUT(
     if (purpose !== undefined) updates.purpose = purpose || '';
     if (subject !== undefined) updates.subject = subject || '';
     if (tags !== undefined) updates.tags = tags || [];
+    if (required_skills !== undefined) updates.required_skills = required_skills || [];
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json<ApiResponse>(
