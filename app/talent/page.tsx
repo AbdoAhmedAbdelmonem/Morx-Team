@@ -162,7 +162,6 @@ export default function TalentMarketplace() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
-                      <SelectItem value="General">General</SelectItem>
                       {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
                         <SelectItem key={code} value={code}>{name}</SelectItem>
                       ))}
@@ -317,3 +316,4 @@ export default function TalentMarketplace() {
 function Label({ children, className }: { children: React.ReactNode, className?: string }) {
   return <label className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`}>{children}</label>
 }
+
