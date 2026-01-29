@@ -436,40 +436,42 @@ export default function TeamSettingsPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="teamName">Team Name</Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        id="teamName"
-                        value={team?.team_name || ""}
-                        onChange={(e) => setTeam({ ...team, team_name: e.target.value })}
-                        placeholder="Team Name"
-                      />
-                      <Button 
-                        onClick={() => {
-                          if (!team?.team_name.trim()) return;
-                          console.log('[Teams Settings] Updating team name:', team.team_name);
-                          fetch(`/api/teams/${teamUrl}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              auth_user_id: user?.auth_user_id,
-                              team_name: team.team_name
-                            })
-                          }).then(res => res.json()).then(res => {
-                            if (res.success) {
-                              alert('Team name updated');
-                            } else {
-                              console.error('[Teams Settings] Update name error:', res.error);
-                              alert(res.error || 'Failed to update team name');
-                            }
-                          }).catch(err => {
-                            console.error('[Teams Settings] Network error updating name:', err);
-                            alert('Network error. Please try again.');
-                          });
-                        }}
-                      >
-                        Save
-                      </Button>
-                    </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Input 
+                          id="teamName"
+                          value={team?.team_name || ""}
+                          onChange={(e) => setTeam({ ...team, team_name: e.target.value })}
+                          placeholder="Team Name"
+                          className="flex-1"
+                        />
+                        <Button 
+                          className="sm:w-32"
+                          onClick={() => {
+                            if (!team?.team_name.trim()) return;
+                            console.log('[Teams Settings] Updating team name:', team.team_name);
+                            fetch(`/api/teams/${teamUrl}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                auth_user_id: user?.auth_user_id,
+                                team_name: team.team_name
+                              })
+                            }).then(res => res.json()).then(res => {
+                              if (res.success) {
+                                alert('Team name updated');
+                              } else {
+                                console.error('[Teams Settings] Update name error:', res.error);
+                                alert(res.error || 'Failed to update team name');
+                              }
+                            }).catch(err => {
+                              console.error('[Teams Settings] Network error updating name:', err);
+                              alert('Network error. Please try again.');
+                            });
+                          }}
+                        >
+                          Save
+                        </Button>
+                      </div>
                   </div>
                   
                   <div className="space-y-2">
@@ -746,9 +748,9 @@ export default function TeamSettingsPage() {
                 <CardContent>
                   <div className="space-y-3">
                     {pendingRequests.map((request) => (
-                      <div key={request.request_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="size-10">
+                      <div key={request.request_id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-lg gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="size-10 shrink-0">
                             {request.user?.profile_image && (
                               <AvatarImage src={request.user.profile_image} alt={request.user.first_name || 'User'} />
                             )}
@@ -756,21 +758,21 @@ export default function TeamSettingsPage() {
                               {request.user?.first_name?.[0]}{request.user?.last_name?.[0] || '?'}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-medium">
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">
                               {request.user?.first_name} {request.user?.last_name || ''}
                             </p>
-                            <p className="text-sm text-muted-foreground">{request.user?.email}</p>
+                            <p className="text-sm text-muted-foreground truncate">{request.user?.email}</p>
                             {request.message && (
-                              <p className="text-sm text-muted-foreground italic mt-1">"{request.message}"</p>
+                              <p className="text-sm text-muted-foreground italic mt-1 line-clamp-2">"{request.message}"</p>
                             )}
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 sm:shrink-0 justify-end">
                           <Button 
                             size="sm" 
                             variant="outline"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
                             onClick={() => handleRequestAction(request.request_id, 'decline')}
                           >
                             <X className="size-4 mr-1" />
@@ -778,6 +780,7 @@ export default function TeamSettingsPage() {
                           </Button>
                           <Button 
                             size="sm"
+                            className="flex-1 sm:flex-none"
                             onClick={() => handleRequestAction(request.request_id, 'approve')}
                           >
                             <Check className="size-4 mr-1" />
@@ -807,7 +810,7 @@ export default function TeamSettingsPage() {
               <CardContent>
                 <div className="space-y-3">
                   {members.map((member) => (
-                    <div key={member.auth_user_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div key={member.auth_user_id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-lg gap-3">
                       <div className="flex items-center gap-4 min-w-0 flex-1">
                         <Avatar className="size-10 shrink-0">
                           {member.profile_image && (
@@ -830,8 +833,8 @@ export default function TeamSettingsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0 ml-4">
-                        <Badge className={getRoleBadgeColor(member.role)}>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                        <Badge className={`${getRoleBadgeColor(member.role)} shrink-0`}>
                           <span className="flex items-center gap-1">
                             {getRoleIcon(member.role)}
                             {member.role}
@@ -906,8 +909,8 @@ export default function TeamSettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex-1">
                       <p className="font-medium">Leave Team</p>
                       <p className="text-sm text-muted-foreground">
                         You will lose access to all projects and tasks in this team
@@ -916,6 +919,7 @@ export default function TeamSettingsPage() {
                     <Button 
                       variant="destructive" 
                       onClick={() => setIsLeaveDialogOpen(true)}
+                      className="w-full sm:w-auto"
                     >
                       <LogOut className="mr-2 size-4" />
                       Leave Team
