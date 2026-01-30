@@ -106,7 +106,11 @@ export default function TeamSettingsPage() {
       const result = await res.json()
       
       if (result.success) {
-        setMembers(result.data || [])
+        const sortedMembers = (result.data || []).sort((a: any, b: any) => {
+          const rolePriority: Record<string, number> = { owner: 1, admin: 2, member: 3 };
+          return (rolePriority[a.role] || 4) - (rolePriority[b.role] || 4);
+        });
+        setMembers(sortedMembers)
       }
     } catch (error) {
       console.error('Error fetching members:', error)
