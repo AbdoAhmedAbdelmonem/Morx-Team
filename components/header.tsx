@@ -119,7 +119,8 @@ export function Header() {
             {isAuthenticated ? (
               <>
                 <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Home</Link>
-                <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Teams</Link>
+                <Link href="/reports" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Reports</Link>
+                <Link href="/teams" data-tutorial="teams-nav" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Teams</Link>
                 <Link href="/templates" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Templates</Link>
                 <Link href="/talent" className="text-sm font-medium text-primary font-bold transition-colors hover:text-primary/80 animate-pulse">Marketplace</Link>
                 <div className="w-px h-4 bg-border/60 self-center" />
@@ -240,7 +241,8 @@ export function Header() {
                   </div>
                 </div>
                 <Link href="/" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-                <Link href="/teams" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Teams</Link>
+                <Link href="/reports" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Reports</Link>
+                <Link href="/teams" data-tutorial="teams-nav-mobile" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Teams</Link>
                 <Link href="/templates" className="block text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>Templates</Link>
                 <Link href="/talent" className="block text-sm font-medium py-2 text-primary font-bold" onClick={() => setMobileMenuOpen(false)}>Marketplace</Link>
                 <Link href="/invitations" className="flex items-center justify-between text-sm font-medium py-2" onClick={() => setMobileMenuOpen(false)}>
@@ -265,7 +267,7 @@ export function Header() {
                   <Button variant="outline" className="w-full rounded-full mt-2">Sign In</Button>
                 </Link>
                 <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full rounded-full">Let's Start</Button>
+                  <Button className="w-full rounded-full">Get Started</Button>
                 </Link>
               </div>
             )}
@@ -275,5 +277,3 @@ export function Header() {
     </header>
   )
 }
-
-

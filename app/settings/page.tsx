@@ -327,20 +327,20 @@ export default function SettingsPage() {
           )}
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-              <TabsTrigger value="profile" className="flex items-center gap-2">
+            <TabsList data-tutorial="settings-tabs" className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+              <TabsTrigger data-tutorial="profile-tab" value="profile" className="flex items-center gap-2">
                 <User className="size-4" />
                 <span className="hidden sm:inline">Profile</span>
               </TabsTrigger>
-              <TabsTrigger value="plan" className="flex items-center gap-2">
+              <TabsTrigger data-tutorial="plan-tab" value="plan" className="flex items-center gap-2">
                 <CreditCard className="size-4" />
                 <span className="hidden sm:inline">Plan</span>
               </TabsTrigger>
-              <TabsTrigger value="appearance" className="flex items-center gap-2">
+              <TabsTrigger data-tutorial="appearance-tab" value="appearance" className="flex items-center gap-2">
                 <Palette className="size-4" />
                 <span className="hidden sm:inline">Appearance</span>
               </TabsTrigger>
-              <TabsTrigger value="professional" className="flex items-center gap-2">
+              <TabsTrigger data-tutorial="professional-tab" value="professional" className="flex items-center gap-2">
                 <Shield className="size-4" />
                 <span className="hidden sm:inline">Professional</span>
               </TabsTrigger>

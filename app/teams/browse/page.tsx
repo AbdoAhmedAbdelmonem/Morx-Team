@@ -216,7 +216,7 @@ export default function BrowseTeamsPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+            <div data-tutorial="browse-teams" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
               {filteredTeams.map((team) => (
                 <Card 
                   key={team.team_id} 
@@ -278,7 +278,7 @@ export default function BrowseTeamsPage() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-muted-foreground opacity-70">
+                        <p className="text-xs text-muted-foreground italic opacity-70">
                           {(() => {
                             const msgs = [
                               "Pulse check: Optional. 💗",
@@ -295,7 +295,7 @@ export default function BrowseTeamsPage() {
                         </p>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-4">
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-4 italic">
                       {team.description || "Too cool for descriptions, apparently. 🙄"}
                     </p>
                     <div className="flex items-center justify-between">
