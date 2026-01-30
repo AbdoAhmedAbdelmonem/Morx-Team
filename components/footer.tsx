@@ -16,18 +16,16 @@ export function Footer() {
   if (!mounted) {
     return (
         <footer className="w-[calc(100%-2rem)] max-w-7xl mx-auto mb-6 rounded-[2.5rem] border border-border/40 bg-background/40 backdrop-blur-xl shadow-lg transition-all duration-300 hover:border-primary/20">
-        <div className="container flex flex-col gap-8 px-6 py-10 md:px-10 lg:py-12">
-            <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
-            <div className="space-y-4">
-                <div className="flex items-center gap-2 font-bold group">
-                <div className="size-8" /> 
-                <span className="rock-salt group-hover:text-primary transition-colors">Morx</span>
+          <div className="container flex flex-col gap-8 px-6 py-10 md:px-10 lg:py-12">
+              <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 font-bold group">
+                    <div className="size-8" /> 
+                    <span className="rock-salt group-hover:text-primary transition-colors">Morx</span>
+                    </div>
                 </div>
-                {/* ... existing skeleton content ... */}
-            </div>
-            {/* ... rest of skeleton ... */}
-            </div>
-        </div>
+              </div>
+          </div>
         </footer>
     )
   }
@@ -103,5 +101,6 @@ export function Footer() {
     </footer>
   )
 }
+
 
 
