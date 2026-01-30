@@ -51,6 +51,14 @@ export function Footer() {
               Advanced reports and statistics platform for data-driven decisions.
             </p>
           </div>
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-foreground/80">Product</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="https://levi-abdoahmed.vercel.app" className="text-muted-foreground hover:text-primary transition-colors">About Owner</Link></li>
+              <li><Link href="/analytics" className="text-muted-foreground hover:text-primary transition-colors">Analytics for Admins</Link></li>
+            </ul>
+          </div>
           
           <div className="space-y-4">
             <h4 className="text-sm font-bold uppercase tracking-wider text-foreground/80">Resources</h4>
@@ -95,4 +103,5 @@ export function Footer() {
     </footer>
   )
 }
+
 
