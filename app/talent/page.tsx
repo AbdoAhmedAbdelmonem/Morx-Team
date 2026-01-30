@@ -162,6 +162,7 @@ export default function TalentMarketplace() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
+                      <SelectItem value="General">General</SelectItem>
                       {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
                         <SelectItem key={code} value={code}>{name}</SelectItem>
                       ))}
@@ -204,7 +205,7 @@ export default function TalentMarketplace() {
               <p className="text-muted-foreground">Try adjusting your filters to find more members.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div data-tutorial="talent-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTalent.map((member) => (
                 <Card key={member.auth_user_id} className="group hover:shadow-xl transition-all duration-300 border-primary/5 hover:border-primary/20 overflow-hidden flex flex-col ">
                   <div className="h-2 bg-gradient-to-r from-primary/40 to-primary/10" />
@@ -316,4 +317,3 @@ export default function TalentMarketplace() {
 function Label({ children, className }: { children: React.ReactNode, className?: string }) {
   return <label className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`}>{children}</label>
 }
-
