@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, ArrowLeft, MoreVertical, Trash2, Calendar, User, AlertCircle, CheckCircle2, Clock, Settings, Edit, MessageSquare, Paperclip, Send, X, Download, Heart, ChevronDown, Check, LayoutGrid, CalendarDays } from "lucide-react"
 import { cn } from "@/lib/utils"
 import TaskCalendar from "@/components/TaskCalendar"
+import { LiveClock } from "@/components/LiveClock"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -704,40 +705,47 @@ export default function ProjectPage() {
               Back
             </Button>
             
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4">
+              {/* Title Section - Always on top */}
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">{project.project_name}</h1>
                 <p className="text-sm text-muted-foreground">{project.team_name} · {tasks.length} tasks</p>
               </div>
               
-              <div className="flex items-center gap-2">
-                {/* View Mode Toggle */}
-                <div className="flex items-center rounded-lg border bg-muted/30 p-1">
-                  <Button
-                    variant={viewMode === 'kanban' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="h-8 px-3 gap-1.5"
-                    onClick={() => setViewMode('kanban')}
-                  >
-                    <LayoutGrid className="size-4" />
-                    <span className="hidden sm:inline">Board</span>
-                  </Button>
-                  <Button
-                    variant={viewMode === 'calendar' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="h-8 px-3 gap-1.5"
-                    onClick={() => setViewMode('calendar')}
-                  >
-                    <CalendarDays className="size-4" />
-                    <span className="hidden sm:inline">Calendar</span>
-                  </Button>
-                </div>
+              {/* Time + Buttons Row */}
+              <div className="flex items-center justify-between">
+                {/* Clock on left */}
+                <LiveClock compact showSettings={false} />
                 
-                {(project.role === 'owner' || project.role === 'admin') && (
-                  <Button variant="outline" size="icon" onClick={handleEditProject}>
-                    <Edit className="size-4" />
-                  </Button>
-                )}
+                {/* Buttons on right */}
+                <div className="flex items-center gap-2">
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center rounded-lg border bg-muted/30 p-1">
+                    <Button
+                      variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-8 px-3 gap-1.5"
+                      onClick={() => setViewMode('kanban')}
+                    >
+                      <LayoutGrid className="size-4" />
+                      <span className="hidden sm:inline">Board</span>
+                    </Button>
+                    <Button
+                      variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-8 px-3 gap-1.5"
+                      onClick={() => setViewMode('calendar')}
+                    >
+                      <CalendarDays className="size-4" />
+                      <span className="hidden sm:inline">Calendar</span>
+                    </Button>
+                  </div>
+                  
+                  {(project.role === 'owner' || project.role === 'admin') && (
+                    <Button variant="outline" size="icon" onClick={handleEditProject}>
+                      <Edit className="size-4" />
+                    </Button>
+                  )}
                 
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
@@ -901,6 +909,7 @@ export default function ProjectPage() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+                </div>
               </div>
             </div>
           </div>
