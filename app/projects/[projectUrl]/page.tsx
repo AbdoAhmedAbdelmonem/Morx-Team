@@ -796,7 +796,7 @@ export default function ProjectPage() {
                               </div>
                             ) : (
                               teamMembers.map((member) => {
-                                const isSelected = selectedAssignees.includes(member.user_id)
+                                const isSelected = selectedAssignees.includes(member.auth_user_id)
                                 return (
                                   <div
                                   key={member.user_id}
@@ -809,8 +809,8 @@ export default function ProjectPage() {
                                   onClick={() => {
                                     setSelectedAssignees(prev =>
                                       isSelected
-                                        ? prev.filter(id => id !== member.user_id)
-                                        : [...prev, member.user_id]
+                                        ? prev.filter(id => id !== member.auth_user_id)
+                                        : [...prev, member.auth_user_id]
                                     )
                                   }}
                                 >
@@ -957,7 +957,7 @@ export default function ProjectPage() {
                           </div>
                         ) : (
                           teamMembers.map((member) => {
-                            const isSelected = selectedAssignees.includes(member.user_id)
+                            const isSelected = selectedAssignees.includes(member.auth_user_id)
                             return (
                               <div
                                 key={member.user_id}
@@ -970,8 +970,8 @@ export default function ProjectPage() {
                                 onClick={() => {
                                   setSelectedAssignees(prev =>
                                     isSelected
-                                      ? prev.filter(id => id !== member.user_id)
-                                      : [...prev, member.user_id]
+                                      ? prev.filter(id => id !== member.auth_user_id)
+                                      : [...prev, member.auth_user_id]
                                   )
                                 }}
                               >
