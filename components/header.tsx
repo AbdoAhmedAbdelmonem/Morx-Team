@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Menu, X, Moon, Sun, Settings, LogOut, Users, Briefcase, Mail } from "lucide-react"
@@ -19,8 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
 import { NotificationPanel } from "@/components/notification-panel"
 import { useAuth } from "@/contexts/auth-context"
-import gsap from "gsap"
-
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -30,7 +28,6 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const [inviteCount, setInviteCount] = useState(0)
-  const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (user?.auth_user_id) {
@@ -61,49 +58,6 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // GSAP smooth animation for nav links
-  useEffect(() => {
-    if (mounted && navRef.current) {
-      const links = navRef.current.querySelectorAll('a, .nav-divider')
-      
-      // Initial state - hidden
-      gsap.set(links, { 
-        opacity: 0, 
-        y: -20 
-      })
-      
-      // Animate in with stagger
-      gsap.to(links, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: "power3.out",
-        delay: 0.2
-      })
-
-      // Add hover animations to each link
-      links.forEach((link) => {
-        if (link.tagName === 'A') {
-          link.addEventListener('mouseenter', () => {
-            gsap.to(link, {
-              scale: 1.05,
-              duration: 0.3,
-              ease: "power2.out"
-            })
-          })
-          link.addEventListener('mouseleave', () => {
-            gsap.to(link, {
-              scale: 1,
-              duration: 0.3,
-              ease: "power2.out"
-            })
-          })
-        }
-      })
-    }
-  }, [mounted, user])
-
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark")
   }
@@ -115,7 +69,6 @@ export function Header() {
   }
 
   const isAuthenticated = !!user
-
 
   if (!mounted) {
     return (
@@ -162,22 +115,22 @@ export function Header() {
             <span className="text-xl rock-salt group-hover:text-primary transition-colors">Morx</span>
           </Link>
           
-          <nav ref={navRef} className="hidden md:flex gap-8 items-center">
+          <nav className="hidden md:flex gap-8">
             {isAuthenticated ? (
               <>
-                <Link href="/" className="nav-link text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Home</Link>
-                <Link href="/teams" className="nav-link text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Teams</Link>
-                <Link href="/templates" className="nav-link text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Templates</Link>
-                <Link href="/talent" className="nav-link text-sm font-medium text-primary font-bold transition-colors hover:text-primary/80">Marketplace</Link>
-                <div className="nav-divider w-px h-4 bg-border/60 self-center" />
-                <Link href="/docs" className="nav-link text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Docs</Link>
-                <Link href="/api" className="nav-link text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">API</Link>
+                <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Home</Link>
+                <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Teams</Link>
+                <Link href="/templates" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Templates</Link>
+                <Link href="/talent" className="text-sm font-medium text-primary font-bold transition-colors hover:text-primary/80 animate-pulse">Marketplace</Link>
+                <div className="w-px h-4 bg-border/60 self-center" />
+                <Link href="/docs" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Docs</Link>
+                <Link href="/api" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">API</Link>
               </>
             ) : (
               <>
-                <Link href="/docs" className="nav-link text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Documentation</Link>
-                <Link href="/api" className="nav-link text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">API</Link>
-                <Link href="/pricing" className="nav-link text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Pricing</Link>
+                <Link href="/docs" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Documentation</Link>
+                <Link href="/api" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">API</Link>
+                <Link href="/pricing" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Pricing</Link>
               </>
             )}
           </nav>
@@ -322,5 +275,3 @@ export function Header() {
     </header>
   )
 }
-
-
