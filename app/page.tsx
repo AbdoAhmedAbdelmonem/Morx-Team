@@ -538,7 +538,7 @@ export default function LandingPage() {
                         name: "Starter",
                         price: "$29",
                         description: "Perfect for small teams and startups.",
-                        features: ["Up to 30 team members", "Basic analytics", "5GB storage", "Email support"],
+                        features: ["Up to 50 team members", "Basic analytics", "5GB storage", "Email support"],
                         cta: "Start Free Trial",
                       },
                       {
