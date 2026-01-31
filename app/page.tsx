@@ -538,7 +538,7 @@ export default function LandingPage() {
                         name: "Starter",
                         price: "$29",
                         description: "Perfect for small teams and startups.",
-                        features: ["Up to 5 team members", "Basic analytics", "5GB storage", "Email support"],
+                        features: ["Up to 50 team members", "Basic analytics", "5GB storage", "Email support"],
                         cta: "Start Free Trial",
                       },
                       {
@@ -546,7 +546,7 @@ export default function LandingPage() {
                         price: "$79",
                         description: "Ideal for growing businesses.",
                         features: [
-                          "Up to 20 team members",
+                          "Up to 80 team members",
                           "Advanced analytics",
                           "25GB storage",
                           "Priority email support",
@@ -619,7 +619,7 @@ export default function LandingPage() {
                         name: "Starter",
                         price: "$23",
                         description: "Perfect for small teams and startups.",
-                        features: ["Up to 5 team members", "Basic analytics", "5GB storage", "Email support"],
+                        features: ["Up to 50 team members", "Basic analytics", "5GB storage", "Email support"],
                         cta: "Start Free Trial",
                       },
                       {
@@ -627,7 +627,7 @@ export default function LandingPage() {
                         price: "$63",
                         description: "Ideal for growing businesses.",
                         features: [
-                          "Up to 20 team members",
+                          "Up to 80 team members",
                           "Advanced analytics",
                           "25GB storage",
                           "Priority email support",
@@ -733,7 +733,7 @@ export default function LandingPage() {
                   {
                     question: "Is there a limit to how many users I can add?",
                     answer:
-                      "The number of users depends on your plan. The Starter plan allows up to 5 team members, the Professional plan allows up to 20, and the Enterprise plan has no limit on team members.",
+                      "The number of users depends on your plan. The Starter plan allows up to 50 team members, the Professional plan allows up to 80, and the Enterprise plan has no limit on team members.",
                   },
                   {
                     question: "Do you offer discounts for nonprofits or educational institutions?",

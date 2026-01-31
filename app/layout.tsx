@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ColorThemeProvider } from "@/components/color-theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/sonner"
+import { TutorialProvider, TutorialOverlay } from "@/components/tutorial"
 
 
 const outfit = Outfit({ 
@@ -28,7 +29,7 @@ const rockSalt = Rock_Salt({
 export const metadata: Metadata = {
   title: "Morx - Reports and Statistics",
   description: "Advanced reports and statistics platform for data-driven decisions.",
-  generator: 'Morx Team'
+  generator: 'MorxCorp'
 }
 
 export default function RootLayout({
@@ -45,9 +46,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ColorThemeProvider defaultTheme="mint">
             <AuthProvider>
-              <div className="pt-24 pb-12">
-                {children}
-              </div>
+                <div className="pt-24 pb-12">
+                  {children}
+                </div>
               <Toaster position="top-right" closeButton />
             </AuthProvider>
           </ColorThemeProvider>

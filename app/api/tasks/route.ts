@@ -380,7 +380,6 @@ export async function PATCH(request: NextRequest) {
               title: '📅 Due Date Changed',
               message: `Task "${taskTitle}" due date changed to ${formattedDate}`,
               task_id: task_id,
-              type: 'task_update',
               is_read: false
             });
           });
@@ -394,7 +393,6 @@ export async function PATCH(request: NextRequest) {
               title: '✅ Task Completed',
               message: `Task "${taskTitle}" in "${project.project_name}" has been marked as done`,
               task_id: task_id,
-              type: 'task_completed',
               is_read: false
             });
           });
@@ -411,7 +409,6 @@ export async function PATCH(request: NextRequest) {
               title: '⚡ Priority Changed',
               message: `Task "${taskTitle}" priority changed to ${newPriorityLabel}`,
               task_id: task_id,
-              type: 'task_update',
               is_read: false
             });
           });

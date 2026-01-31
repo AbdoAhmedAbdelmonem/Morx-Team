@@ -19,6 +19,7 @@ export interface User {
   bio?: string | null;
   skills?: any | null;
   is_available?: boolean;
+  skip_tutorial?: boolean;
   created_at?: string;
 }
 

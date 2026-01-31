@@ -259,7 +259,7 @@ export default function TeamsPage() {
 
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="flex-1 sm:flex-initial h-10 sm:h-9">
+                <Button data-tutorial="create-team-btn" className="flex-1 sm:flex-initial h-10 sm:h-9">
                   <Plus className="mr-2 size-4" />
                   Create Team
                 </Button>
