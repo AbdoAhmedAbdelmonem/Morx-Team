@@ -271,10 +271,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Get task and project info
+    // Get task and project info (including original values for comparison)
     const { data: task } = await supabase
       .from('tasks')
-      .select('task_id, project_id')
+      .select('task_id, project_id, title, due_date, status, priority')
       .eq('task_id', task_id)
       .single();
 
@@ -285,10 +285,15 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Store original values for comparison
+    const originalDueDate = task.due_date;
+    const originalStatus = task.status;
+    const originalPriority = task.priority;
+
     // Get project team
     const { data: project } = await supabase
       .from('projects')
-      .select('team_id')
+      .select('team_id, project_name')
       .eq('project_id', task.project_id)
       .single();
 
@@ -349,6 +354,79 @@ export async function PATCH(request: NextRequest) {
 
     if (updateError) throw updateError;
 
+    // Send notifications for significant changes
+    try {
+      // Get assigned users for this task
+      const { data: assignments } = await supabase
+        .from('task_assignments')
+        .select('auth_user_id')
+        .eq('task_id', task_id);
+
+      const assignedUserIds = assignments?.map(a => a.auth_user_id).filter(id => id !== authUserId) || [];
+
+      if (assignedUserIds.length > 0) {
+        const taskTitle = decodeContent(task.title);
+        const notifications: any[] = [];
+
+        // Check for due date change
+        if (due_date !== undefined && due_date !== originalDueDate) {
+          const formattedDate = due_date 
+            ? new Date(due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : 'No due date';
+          
+          assignedUserIds.forEach((userId: string) => {
+            notifications.push({
+              auth_user_id: userId,
+              title: '📅 Due Date Changed',
+              message: `Task "${taskTitle}" due date changed to ${formattedDate}`,
+              task_id: task_id,
+              type: 'task_update',
+              is_read: false
+            });
+          });
+        }
+
+        // Check for status change to completed (status 2 = done)
+        if (status !== undefined && status === 2 && originalStatus !== 2) {
+          assignedUserIds.forEach((userId: string) => {
+            notifications.push({
+              auth_user_id: userId,
+              title: '✅ Task Completed',
+              message: `Task "${taskTitle}" in "${project.project_name}" has been marked as done`,
+              task_id: task_id,
+              type: 'task_completed',
+              is_read: false
+            });
+          });
+        }
+
+        // Check for priority change
+        if (priority !== undefined && priority !== originalPriority) {
+          const priorityLabels: Record<number, string> = { 1: 'Low', 2: 'Medium', 3: 'High' };
+          const newPriorityLabel = priorityLabels[priority] || 'Unknown';
+          
+          assignedUserIds.forEach((userId: string) => {
+            notifications.push({
+              auth_user_id: userId,
+              title: '⚡ Priority Changed',
+              message: `Task "${taskTitle}" priority changed to ${newPriorityLabel}`,
+              task_id: task_id,
+              type: 'task_update',
+              is_read: false
+            });
+          });
+        }
+
+        // Insert all notifications
+        if (notifications.length > 0) {
+          await supabase.from('notifications').insert(notifications);
+        }
+      }
+    } catch (notifError) {
+      // Log error but don't fail the update
+      console.error('Failed to send update notifications:', notifError);
+    }
+
     return NextResponse.json<ApiResponse>({
       success: true,
       message: 'Task updated successfully',
@@ -366,6 +444,7 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
 
 /**
  * Delete task
