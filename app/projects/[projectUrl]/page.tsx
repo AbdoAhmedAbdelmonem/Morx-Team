@@ -17,8 +17,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, ArrowLeft, MoreVertical, Trash2, Calendar, User, AlertCircle, CheckCircle2, Clock, Settings, Edit, MessageSquare, Paperclip, Send, X, Download, Heart, ChevronDown, Check } from "lucide-react"
+import { Plus, ArrowLeft, MoreVertical, Trash2, Calendar, User, AlertCircle, CheckCircle2, Clock, Settings, Edit, MessageSquare, Paperclip, Send, X, Download, Heart, ChevronDown, Check, LayoutGrid, CalendarDays } from "lucide-react"
 import { cn } from "@/lib/utils"
+import TaskCalendar from "@/components/TaskCalendar"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -99,6 +100,9 @@ export default function ProjectPage() {
   const [isLoadingFiles, setIsLoadingFiles] = useState(false)
   const [uploadingFile, setUploadingFile] = useState(false)
   const [lastDroppedId, setLastDroppedId] = useState<number | null>(null)
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<'kanban' | 'calendar'>('kanban')
 
   useEffect(() => {
     // Auth is now managed by useAuth context
@@ -707,6 +711,28 @@ export default function ProjectPage() {
               </div>
               
               <div className="flex items-center gap-2">
+                {/* View Mode Toggle */}
+                <div className="flex items-center rounded-lg border bg-muted/30 p-1">
+                  <Button
+                    variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="h-8 px-3 gap-1.5"
+                    onClick={() => setViewMode('kanban')}
+                  >
+                    <LayoutGrid className="size-4" />
+                    <span className="hidden sm:inline">Board</span>
+                  </Button>
+                  <Button
+                    variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="h-8 px-3 gap-1.5"
+                    onClick={() => setViewMode('calendar')}
+                  >
+                    <CalendarDays className="size-4" />
+                    <span className="hidden sm:inline">Calendar</span>
+                  </Button>
+                </div>
+                
                 {(project.role === 'owner' || project.role === 'admin') && (
                   <Button variant="outline" size="icon" onClick={handleEditProject}>
                     <Edit className="size-4" />
@@ -1428,7 +1454,15 @@ export default function ProjectPage() {
             </DialogContent>
           </Dialog>
 
-          {/* Kanban Board */}
+          {/* View Mode: Calendar */}
+          {viewMode === 'calendar' && (
+            <div className="mt-2">
+              <TaskCalendar tasks={tasks} onTaskClick={openTaskDetails} />
+            </div>
+          )}
+
+          {/* View Mode: Kanban Board */}
+          {viewMode === 'kanban' && (
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               {/* To Do Column */}
@@ -1585,6 +1619,7 @@ export default function ProjectPage() {
               </Droppable>
             </div>
           </DragDropContext>
+          )}
         </div>
       </main>
       <Footer />
