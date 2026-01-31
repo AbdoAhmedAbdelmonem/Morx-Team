@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTheme } from "next-themes"
 import { useColorTheme } from "@/components/color-theme-provider"
 import { useAuth } from "@/contexts/auth-context"
-import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop } from "lucide-react"
+import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop, Clock } from "lucide-react"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { toast } from "sonner"
@@ -83,6 +83,135 @@ function ColorThemeSelector() {
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+// Clock Settings Component
+function ClockSettingsContent() {
+  const [is24Hour, setIs24Hour] = useState(true)
+  const [timezone, setTimezone] = useState("Africa/Cairo")
+  const [time, setTime] = useState(new Date())
+  const [mounted, setMounted] = useState(false)
+
+  const TIMEZONES = [
+    { value: "Africa/Cairo", label: "Cairo (GMT+2)" },
+    { value: "UTC", label: "UTC (GMT+0)" },
+    { value: "America/New_York", label: "New York (EST/EDT)" },
+    { value: "America/Los_Angeles", label: "Los Angeles (PST/PDT)" },
+    { value: "America/Chicago", label: "Chicago (CST/CDT)" },
+    { value: "Europe/London", label: "London (GMT/BST)" },
+    { value: "Europe/Paris", label: "Paris (CET/CEST)" },
+    { value: "Europe/Berlin", label: "Berlin (CET/CEST)" },
+    { value: "Asia/Dubai", label: "Dubai (GST)" },
+    { value: "Asia/Kolkata", label: "Mumbai (IST)" },
+    { value: "Asia/Shanghai", label: "Shanghai (CST)" },
+    { value: "Asia/Tokyo", label: "Tokyo (JST)" },
+    { value: "Asia/Singapore", label: "Singapore (SGT)" },
+    { value: "Australia/Sydney", label: "Sydney (AEST/AEDT)" },
+    { value: "Africa/Johannesburg", label: "Johannesburg (SAST)" },
+  ]
+
+  useEffect(() => {
+    setMounted(true)
+    // Load saved preferences
+    const savedFormat = localStorage.getItem("clock_format")
+    const savedTimezone = localStorage.getItem("clock_timezone")
+    
+    if (savedFormat !== null) {
+      setIs24Hour(savedFormat === "24")
+    }
+    if (savedTimezone) {
+      setTimezone(savedTimezone)
+    }
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleFormatChange = (value: boolean) => {
+    setIs24Hour(value)
+    localStorage.setItem("clock_format", value ? "24" : "12")
+  }
+
+  const handleTimezoneChange = (value: string) => {
+    setTimezone(value)
+    localStorage.setItem("clock_timezone", value)
+  }
+
+  const formatTime = () => {
+    try {
+      return time.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: !is24Hour,
+        timeZone: timezone,
+      })
+    } catch {
+      return time.toLocaleTimeString()
+    }
+  }
+
+  if (!mounted) return null
+
+  return (
+    <>
+      {/* 12/24 Hour Format */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <Label htmlFor="clock-format" className="text-base font-medium">24-Hour Format</Label>
+          <p className="text-sm text-muted-foreground">
+            {is24Hour ? "Showing time in 24-hour format (e.g., 14:30)" : "Showing time in 12-hour format (e.g., 2:30 PM)"}
+          </p>
+        </div>
+        <Switch
+          id="clock-format"
+          checked={is24Hour}
+          onCheckedChange={handleFormatChange}
+        />
+      </div>
+
+      <Separator />
+
+      {/* Timezone Selection */}
+      <div className="space-y-3">
+        <Label className="text-base font-medium">Timezone</Label>
+        <Select value={timezone} onValueChange={handleTimezoneChange}>
+          <SelectTrigger className="w-full md:w-80">
+            <SelectValue placeholder="Select your timezone" />
+          </SelectTrigger>
+          <SelectContent>
+            {TIMEZONES.map((tz) => (
+              <SelectItem key={tz.value} value={tz.value}>
+                <span className="flex items-center gap-2">
+                  {timezone === tz.value && <Check className="size-3 text-primary" />}
+                  {tz.label}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-sm text-muted-foreground">
+          This affects how times are displayed in projects and tasks
+        </p>
+      </div>
+
+      <Separator />
+
+      {/* Live Preview */}
+      <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/20">
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Current Time Preview</p>
+          <p className="text-xs text-muted-foreground">{TIMEZONES.find(t => t.value === timezone)?.label}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock className="size-5 text-primary" />
+          <span className="font-mono text-xl font-bold">{formatTime()}</span>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -778,6 +907,22 @@ export default function SettingsPage() {
               </Card>
 
               <ColorThemeSelector />
+
+              {/* Clock Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="size-5" />
+                    Clock Settings
+                  </CardTitle>
+                  <CardDescription>
+                    Configure how time is displayed across the platform
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <ClockSettingsContent />
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
