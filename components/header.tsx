@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
 import { Menu, X, Moon, Sun, Settings, LogOut, Users, Briefcase, Mail } from "lucide-react"
@@ -115,25 +116,106 @@ export function Header() {
             <span className="text-xl rock-salt group-hover:text-primary transition-colors">Morx</span>
           </Link>
           
-          <nav className="hidden md:flex gap-8">
+          <motion.nav 
+            className="hidden md:flex gap-8"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: {
+                transition: {
+                  staggerChildren: 0.08
+                }
+              }
+            }}
+          >
             {isAuthenticated ? (
               <>
-                <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Home</Link>
-                <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Teams</Link>
-                <Link href="/templates" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Templates</Link>
-                <Link href="/talent" className="text-sm font-medium text-primary font-bold transition-colors hover:text-primary/80 animate-pulse">Marketplace</Link>
-                <div className="w-px h-4 bg-border/60 self-center" />
-                <Link href="/docs" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Docs</Link>
-                <Link href="/api" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">API</Link>
+                {[
+                  { href: "/", label: "Home" },
+                  { href: "/teams", label: "Teams" },
+                  { href: "/templates", label: "Templates" },
+                ].map((link, i) => (
+                  <motion.div
+                    key={link.href}
+                    variants={{
+                      hidden: { opacity: 0, y: -10 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: -10 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Link href="/talent" className="text-sm font-medium text-primary font-bold transition-colors hover:text-primary/80">
+                    Marketplace
+                  </Link>
+                </motion.div>
+                <motion.div 
+                  className="w-px h-4 bg-border/60 self-center"
+                  variants={{
+                    hidden: { opacity: 0, scaleY: 0 },
+                    visible: { opacity: 1, scaleY: 1 }
+                  }}
+                />
+                {[
+                  { href: "/docs", label: "Docs" },
+                  { href: "/api", label: "API" },
+                ].map((link) => (
+                  <motion.div
+                    key={link.href}
+                    variants={{
+                      hidden: { opacity: 0, y: -10 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
               </>
             ) : (
               <>
-                <Link href="/docs" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Documentation</Link>
-                <Link href="/api" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">API</Link>
-                <Link href="/pricing" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Pricing</Link>
+                {[
+                  { href: "/docs", label: "Documentation" },
+                  { href: "/api", label: "API" },
+                  { href: "/pricing", label: "Pricing" },
+                ].map((link) => (
+                  <motion.div
+                    key={link.href}
+                    variants={{
+                      hidden: { opacity: 0, y: -10 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
               </>
             )}
-          </nav>
+          </motion.nav>
 
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
