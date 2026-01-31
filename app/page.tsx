@@ -733,7 +733,7 @@ export default function LandingPage() {
                   {
                     question: "Is there a limit to how many users I can add?",
                     answer:
-                      "The number of users depends on your plan. The Starter plan allows up to 5 team members, the Professional plan allows up to 20, and the Enterprise plan has no limit on team members.",
+                      "The number of users depends on your plan. The Starter plan allows up to 50 team members, the Professional plan allows up to 80, and the Enterprise plan has no limit on team members.",
                   },
                   {
                     question: "Do you offer discounts for nonprofits or educational institutions?",
