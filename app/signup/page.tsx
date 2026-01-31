@@ -85,7 +85,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-primary/30 relative overflow-hidden font-sans">
+    <div className="-mt-24 -mb-12 h-screen bg-[#050505] text-white selection:bg-primary/30 relative overflow-hidden font-sans">
       {/* Immersive Background */}
       <motion.div 
         className="absolute inset-0 z-0 pointer-events-none"
@@ -99,7 +99,7 @@ export default function SignUpPage() {
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03]" />
       </motion.div>
 
-      <div className="container relative z-10 min-h-screen flex flex-col items-center justify-center px-4">
+      <div className="container relative z-10 h-full flex flex-col items-center justify-center px-4">
         {/* Persistent Branding */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -181,19 +181,6 @@ export default function SignUpPage() {
 
 
         </AnimatePresence>
-
-        {/* Footer info */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
-          className="absolute bottom-12 text-[10px] font-black uppercase tracking-[0.2em] flex gap-8 items-center"
-        >
-          <span>Privacy Priority</span>
-          <div className="size-1 bg-neutral-800 rounded-full" />
-          <span>AES-256 Protocol</span>
-          <div className="size-1 bg-neutral-800 rounded-full" />
-          <span>Morx Core v1.0</span>
-        </motion.div>
       </div>
     </div>
   )

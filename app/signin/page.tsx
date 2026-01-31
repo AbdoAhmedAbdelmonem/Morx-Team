@@ -83,7 +83,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-primary/30 relative overflow-hidden font-sans">
+    <div className="-mt-24 -mb-12 h-screen bg-[#050505] text-white selection:bg-primary/30 relative overflow-hidden font-sans">
       {/* Dynamic Aura Background */}
       <motion.div 
         className="absolute inset-0 z-0 pointer-events-none"
@@ -97,7 +97,7 @@ export default function SignInPage() {
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
       </motion.div>
 
-      <div className="container relative z-10 min-h-screen flex flex-col items-center justify-center px-4">
+      <div className="container relative z-10 h-full flex flex-col items-center justify-center px-4">
         {/* Top Branding Anchor */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -197,19 +197,6 @@ export default function SignInPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Global Status Footer */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.3 }}
-          className="absolute bottom-12 text-[10px] font-black uppercase tracking-[0.3em] flex gap-10 items-center overflow-hidden"
-        >
-          <div className="flex items-center gap-3 shrink-0"><div className="size-1.5 bg-green-500 rounded-full animate-pulse" /> Nodes Verified</div>
-          <div className="size-1 bg-neutral-800 rounded-full shrink-0" />
-          <div className="shrink-0">Quantum Encrypted</div>
-          <div className="size-1 bg-neutral-800 rounded-full shrink-0" />
-          <div className="shrink-0">Morx Core v1.0.4</div>
-        </motion.div>
       </div>
     </div>
   )
