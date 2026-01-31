@@ -348,11 +348,15 @@ export default function TaskCalendar({ tasks, onTaskClick }: TaskCalendarProps) 
                   const statusInfo = getStatusInfo(task.status)
                   const taskIsOverdue = isOverdue(task.due_date, task.status)
                   
-                  // Parse assigned users
+                  // Parse assigned users - only split on first 2 colons to preserve URL
                   const assignees = task.assigned_users
                     ? task.assigned_users.split('||').map(a => {
-                        const [id, name, image] = a.split(':')
-                        return { id, name, image }
+                        const parts = a.split(':')
+                        const id = parts[0]
+                        const name = parts[1]
+                        // Image URL may contain colons, so join remaining parts
+                        const image = parts.slice(2).join(':')
+                        return { id, name, image: image || undefined }
                       })
                     : []
 
