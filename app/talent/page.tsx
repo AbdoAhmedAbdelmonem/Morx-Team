@@ -8,10 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { Search, Users, Star, MessageSquare, Briefcase, Filter, X } from "lucide-react"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { toast } from "sonner"
@@ -211,12 +211,17 @@ export default function TalentMarketplace() {
                   <div className="h-2 bg-gradient-to-r from-primary/40 to-primary/10" />
                   <CardHeader className="pb-4">
                     <div className="flex items-start gap-4">
-                      <Avatar className="size-16 border-2 border-primary/10">
-                        <AvatarImage src={member.profile_image} />
-                        <AvatarFallback className="text-xl bg-primary/5 text-primary">
-                          {member.first_name?.[0]}{member.last_name?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
+                      <PlanAvatar
+                        src={member.profile_image}
+                        alt={member.first_name || ''}
+                        plan={member.plan}
+                        fallback={
+                          <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold">
+                            {member.first_name?.[0]}{member.last_name?.[0]}
+                          </div>
+                        }
+                        size="xl"
+                      />
                       <div className="flex-1 min-w-0">
                         <CardTitle className="text-xl font-bold truncate group-hover:text-primary transition-colors">
                           {member.first_name} {member.last_name}
