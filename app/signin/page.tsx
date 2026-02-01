@@ -7,6 +7,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
 import { 
   ArrowRight, 
   ArrowLeft,
@@ -19,10 +20,18 @@ import {
 
 export default function SignInPage() {
   const router = useRouter()
+  const { user, isLoading: isAuthLoading } = useAuth()
   const [step, setStep] = useState(0) // 0: Splash, 1: Process
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [supabase, setSupabase] = useState<any>(null)
+
+  // Redirect logged-in users to home
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      router.replace("/")
+    }
+  }, [user, isAuthLoading, router])
 
   // Initialize Supabase client on mount
   useEffect(() => {
