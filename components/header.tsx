@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { useRouter } from "next/navigation"
 import { NotificationPanel } from "@/components/notification-panel"
 import { useAuth } from "@/contexts/auth-context"
@@ -228,11 +229,14 @@ export function Header() {
                 <div className="hidden md:block">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.profile_image} alt={user.first_name || ''} />
-                          <AvatarFallback>{user.first_name?.[0]}</AvatarFallback>
-                        </Avatar>
+                      <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                        <PlanAvatar
+                          src={user.profile_image}
+                          alt={user.first_name || ''}
+                          plan={user.plan}
+                          fallback={user.first_name?.[0]}
+                          size="md"
+                        />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -308,10 +312,13 @@ export function Header() {
             {isAuthenticated && user ? (
               <>
                 <div className="flex items-center gap-3 pb-4 mb-4 border-b">
-                  <Avatar className="h-12 w-12 border-2 border-primary/20">
-                    <AvatarImage src={user.profile_image} alt={user.first_name || ''} />
-                    <AvatarFallback className="bg-primary/10 text-primary">{user.first_name?.[0]}</AvatarFallback>
-                  </Avatar>
+                  <PlanAvatar
+                    src={user.profile_image}
+                    alt={user.first_name || ''}
+                    plan={user.plan}
+                    fallback={<span className="bg-primary/10 text-primary">{user.first_name?.[0]}</span>}
+                    size="lg"
+                  />
                   <div className="flex flex-col">
                     <p className="font-semibold text-foreground">
                       {user.first_name} {user.last_name || ''}

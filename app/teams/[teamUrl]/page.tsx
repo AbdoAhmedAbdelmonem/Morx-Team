@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Users, Folder, MoreVertical, Trash2, ArrowLeft, Settings, BarChart3, AlertTriangle, FileText, GraduationCap } from "lucide-react"
@@ -506,12 +507,12 @@ export default function TeamDetailPage() {
                       <Card key={member.auth_user_id} className="p-3 sm:p-4">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
-                            <Avatar className="size-9 sm:size-10 flex-shrink-0">
-                              <AvatarImage src={member.profile_image} />
-                              <AvatarFallback className="text-xs sm:text-sm">
-                                {member.first_name?.[0]}{member.last_name?.[0]}
-                              </AvatarFallback>
-                            </Avatar>
+                            <PlanAvatar
+                              src={member.profile_image}
+                              plan={member.plan}
+                              fallback={<span className="text-xs sm:text-sm">{member.first_name?.[0]}{member.last_name?.[0]}</span>}
+                              size="md"
+                            />
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm sm:text-base truncate">{member.first_name}{member.last_name ? ` ${member.last_name}` : ''}</p>
                               <p className="text-xs sm:text-sm text-muted-foreground truncate">{member.email}</p>

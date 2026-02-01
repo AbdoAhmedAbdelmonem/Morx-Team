@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     // Query by auth_user_id (UUID)
     const { data: userProfile, error } = await supabase
       .from('users')
-      .select('auth_user_id, first_name, last_name, email, profile_image, department, study_level, faculty, bio, skills, is_available, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, plan, department, study_level, faculty, bio, skills, is_available, created_at')
       .eq('auth_user_id', authUserId)
       .single();
 
@@ -42,10 +42,10 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { first_name, last_name } = body;
+    const { first_name, last_name, plan } = body;
     const authUserId = user.id;
 
-    if (!first_name && !last_name) {
+    if (!first_name && !last_name && !plan) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'At least one field must be provided' },
         { status: 400 }
@@ -56,6 +56,7 @@ export async function PUT(request: NextRequest) {
     const updates: Record<string, any> = {};
     if (first_name) updates.first_name = first_name;
     if (last_name) updates.last_name = last_name;
+    if (plan !== undefined) updates.plan = plan;
 
     const { error: updateError } = await supabase
       .from('users')
@@ -66,7 +67,7 @@ export async function PUT(request: NextRequest) {
 
     const { data: updatedUser } = await supabase
       .from('users')
-      .select('auth_user_id, first_name, last_name, email, profile_image, department, study_level, faculty, bio, skills, is_available, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, plan, department, study_level, faculty, bio, skills, is_available, created_at')
       .eq('auth_user_id', authUserId)
       .single();
 

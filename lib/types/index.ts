@@ -6,6 +6,9 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
+// Plan type for subscription tiers
+export type PlanType = 'free' | 'starter' | 'professional' | 'enterprise';
+
 // User type - uses auth_user_id (UUID) as primary identifier
 export interface User {
   auth_user_id: string;  // UUID from Supabase Auth - PRIMARY identifier
@@ -13,6 +16,7 @@ export interface User {
   last_name?: string;
   email: string;
   profile_image?: string;
+  plan?: PlanType;  // Subscription plan tier
   study_level?: number | null;
   department?: string | null;
   faculty?: string | null;
