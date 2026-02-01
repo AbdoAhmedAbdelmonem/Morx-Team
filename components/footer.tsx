@@ -77,7 +77,7 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="flex flex-col gap-4 sm:flex-row justify-between items-start border-t border-border/20 pt-8">
+        <div className="flex flex-row justify-between items-center border-t border-border/20 pt-8">
           <div className="flex flex-col gap-1">
             <p className="text-xs text-muted-foreground font-medium">
                 &copy; {new Date().getFullYear()} Morx. All rights reserved.
@@ -93,14 +93,18 @@ export function Footer() {
                 />
             </Link>
           </div>
-          <div className="flex gap-6 mt-4 sm:mt-0">
-             <div className="size-2 rounded-full bg-primary/40 animate-pulse" title="System Status: Online" />
+          <div className="flex items-center gap-4">
+            <Image 
+              src="/made in egypt.png" 
+              alt="Made in Egypt" 
+              width={80} 
+              height={40} 
+              className="h-8 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" 
+            />
+            <div className="size-2 rounded-full bg-primary/40 animate-pulse" title="System Status: Online" />
           </div>
         </div>
       </div>
     </footer>
   )
 }
-
-
-
