@@ -109,12 +109,12 @@ export function Header() {
       >
         <div className="container flex h-full items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2 font-bold group focus:outline-none">
-            <div className="relative size-10 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+            <div className="relative size-9 rounded-full bg-primary flex items-center justify-center overflow-hidden">
               <Image 
                 src="/Morx upscaled.png" 
                 alt="Morx" 
-                width={40} 
-                height={40} 
+                width={36} 
+                height={36} 
                 className="size-full object-cover transition-transform group-hover:scale-110" 
               />
             </div>
