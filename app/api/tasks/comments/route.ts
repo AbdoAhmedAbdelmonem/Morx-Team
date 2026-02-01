@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     if (commentUserIds.length > 0) {
       const { data: users } = await supabase
         .from('users')
-        .select('auth_user_id, first_name, last_name, profile_image')
+        .select('auth_user_id, first_name, last_name, profile_image, plan')
         .in('auth_user_id', commentUserIds);
 
       users?.forEach((u: any) => {
@@ -95,7 +95,8 @@ export async function GET(request: NextRequest) {
       likes: c.likes || 0,
       first_name: usersMap[c.auth_user_id]?.first_name,
       last_name: usersMap[c.auth_user_id]?.last_name,
-      profile_image: usersMap[c.auth_user_id]?.profile_image
+      profile_image: usersMap[c.auth_user_id]?.profile_image,
+      plan: usersMap[c.auth_user_id]?.plan
     })) || [];
 
     return NextResponse.json<ApiResponse>({
@@ -188,7 +189,7 @@ export async function POST(request: NextRequest) {
     // Get user info for response
     const { data: userInfo } = await supabase
       .from('users')
-      .select('first_name, last_name, profile_image')
+      .select('first_name, last_name, profile_image, plan')
       .eq('auth_user_id', authUserId)
       .single();
 
@@ -201,7 +202,8 @@ export async function POST(request: NextRequest) {
         likes: 0,
         first_name: userInfo?.first_name,
         last_name: userInfo?.last_name,
-        profile_image: userInfo?.profile_image
+        profile_image: userInfo?.profile_image,
+        plan: userInfo?.plan
       }
     });
 

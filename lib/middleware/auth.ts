@@ -56,7 +56,7 @@ export async function requireAuth(request: NextRequest) {
         console.log('[Auth] Stale session for', userData.email, '- fetching auth_user_id from DB...');
         const { data: dbUser } = await supabase
           .from('users')
-          .select('auth_user_id, first_name, last_name, profile_image, created_at')
+          .select('auth_user_id, first_name, last_name, profile_image, plan, created_at')
           .eq('email', userData.email)
           .single();
 

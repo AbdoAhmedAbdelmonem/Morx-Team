@@ -20,6 +20,8 @@ import { useAuth } from "@/contexts/auth-context"
 import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop, Clock } from "lucide-react"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
+import { PLAN_LIMITS, getPlanLimit, getPlanBorderColor } from "@/lib/constants/plans"
+import { PlanType } from "@/lib/types"
 import { toast } from "sonner"
 
 function ColorThemeSelector() {
@@ -323,22 +325,59 @@ export default function SettingsPage() {
     }
   }, [authUser, isAuthLoading])
 
-  // Plan data
-  const planData = {
-    name: "Free",
-    price: "Free Forever",
-    status: "Active until 31 December 2026",
-    nextBilling: null,
-    features: [
+  // Dynamic plan data based on user's actual plan
+  const userPlan = (user?.plan || 'free') as PlanType
+  const planLimit = getPlanLimit(userPlan)
+  const planBorderColor = getPlanBorderColor(userPlan)
+
+  const PLAN_FEATURES: Record<PlanType, string[]> = {
+    free: [
+      "Up to 15 team members",
       "Unlimited teams",
-      "Up to 15 members per team",
       "Unlimited projects",
       "Unlimited tasks",
       "Team collaboration",
       "Task comments & assignments"
     ],
+    starter: [
+      "Up to 50 team members",
+      "Basic analytics",
+      "5GB storage",
+      "Email support",
+      "Yellow profile border"
+    ],
+    professional: [
+      "Up to 80 team members",
+      "Advanced analytics",
+      "25GB storage",
+      "Priority email support",
+      "API access",
+      "Blue profile border"
+    ],
+    enterprise: [
+      "Unlimited team members",
+      "Custom analytics",
+      "Unlimited storage",
+      "24/7 phone & email support",
+      "Red profile border"
+    ]
+  }
+
+  const PLAN_NAMES: Record<PlanType, string> = {
+    free: "Free",
+    starter: "Starter",
+    professional: "Professional",
+    enterprise: "Enterprise"
+  }
+
+  const planData = {
+    name: PLAN_NAMES[userPlan],
+    price: userPlan === 'free' ? "Free Forever" : userPlan === 'starter' ? "$29/month" : userPlan === 'professional' ? "$79/month" : "$199/month",
+    status: "Active",
+    borderColor: planBorderColor,
+    features: PLAN_FEATURES[userPlan],
     limits: {
-      teamMembers: 15,
+      teamMembers: planLimit === Infinity ? 'Unlimited' : planLimit,
     }
   }
 
@@ -827,19 +866,21 @@ export default function SettingsPage() {
                                 <div className="flex items-center justify-between text-sm">
                                   <span className="font-medium">{team.team_name}</span>
                                   <span className="text-muted-foreground">
-                                    {team.member_count} / {team.member_limit} members
+                                    {team.member_count} / {team.member_limit === null ? 'Unlimited' : team.member_limit} members
                                   </span>
                                 </div>
                                 <div className="w-full bg-background rounded-full h-2">
                                   <div
                                     className={`h-2 rounded-full transition-all ${
-                                      team.member_count >= team.member_limit 
-                                        ? 'bg-destructive' 
-                                        : team.member_count >= team.member_limit * 0.8 
-                                          ? 'bg-yellow-500' 
-                                          : 'bg-primary'
+                                      team.member_limit === null
+                                        ? 'bg-primary'
+                                        : team.member_count >= team.member_limit 
+                                          ? 'bg-destructive' 
+                                          : team.member_count >= team.member_limit * 0.8 
+                                            ? 'bg-yellow-500' 
+                                            : 'bg-primary'
                                     }`}
-                                    style={{ width: `${Math.min((team.member_count / team.member_limit) * 100, 100)}%` }}
+                                    style={{ width: `${team.member_limit === null ? Math.min((team.member_count / 100) * 100, 10) : Math.min((team.member_count / team.member_limit) * 100, 100)}%` }}
                                   />
                                 </div>
                               </div>
@@ -859,7 +900,7 @@ export default function SettingsPage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <span className="text-sm">Members per Team</span>
-                        <Badge variant="secondary">{planData.limits.teamMembers} max</Badge>
+                        <Badge variant="secondary">{typeof planData.limits.teamMembers === 'number' ? `${planData.limits.teamMembers} max` : planData.limits.teamMembers}</Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <span className="text-sm">Teams</span>
@@ -875,6 +916,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
+
                 </CardContent>
               </Card>
             </TabsContent>

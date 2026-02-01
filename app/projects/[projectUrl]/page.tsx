@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -50,6 +51,7 @@ interface Comment {
   first_name: string
   last_name: string
   profile_image: string | null
+  plan?: string | null
   likes: number
 }
 
@@ -1207,12 +1209,12 @@ export default function ProjectPage() {
                     {teamMembers.map((member) => (
                       <div key={member.user_id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                         <div className="flex items-center gap-3">
-                          <Avatar className="size-10">
-                            <AvatarImage src={member.profile_image} />
-                            <AvatarFallback>
-                              {member.first_name?.[0]}{member.last_name?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
+                          <PlanAvatar
+                            src={member.profile_image}
+                            plan={member.plan}
+                            fallback={<>{member.first_name?.[0]}{member.last_name?.[0]}</>}
+                            size="md"
+                          />
                           <div>
                             <p className="font-medium text-sm">{member.first_name} {member.last_name}</p>
                             <p className="text-xs text-muted-foreground">{member.email}</p>
@@ -1273,12 +1275,12 @@ export default function ProjectPage() {
                       
                       {/* Add Comment Form */}
                       <div className="flex gap-2">
-                        <Avatar className="size-8">
-                          <AvatarImage src={user?.profile_image} />
-                          <AvatarFallback>
-                            {user?.first_name?.[0]}{user?.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
+                        <PlanAvatar
+                          src={user?.profile_image}
+                          plan={user?.plan}
+                          fallback={<>{user?.first_name?.[0]}{user?.last_name?.[0]}</>}
+                          size="sm"
+                        />
                         <div className="flex-1 flex gap-2">
                           <Input
                             placeholder="Add a comment..."
@@ -1302,12 +1304,12 @@ export default function ProjectPage() {
                           <div className="space-y-4">
                             {comments.map((comment) => (
                               <div key={comment.comment_id} className="flex gap-3">
-                                <Avatar className="size-8">
-                                  <AvatarImage src={comment.profile_image || undefined} />
-                                  <AvatarFallback className="text-xs">
-                                    {comment.first_name?.[0]}{comment.last_name?.[0]}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <PlanAvatar
+                                  src={comment.profile_image || undefined}
+                                  plan={comment.plan as any}
+                                  fallback={<span className="text-xs">{comment.first_name?.[0]}{comment.last_name?.[0]}</span>}
+                                  size="sm"
+                                />
                                 <div className="flex-1 space-y-1">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
@@ -1366,16 +1368,15 @@ export default function ProjectPage() {
                             const userId = parts[0]
                             const name = parts[1] || ''
                             const profileImage = parts.slice(2).join(':') || ''
+                            const memberPlan = teamMembers.find(m => m.auth_user_id === userId)?.plan
                             return (
                               <div key={idx} className="flex items-center gap-2 text-sm">
-                                <Avatar className="size-6">
-                                  {profileImage ? (
-                                    <AvatarImage src={profileImage} alt={name} />
-                                  ) : null}
-                                  <AvatarFallback className="text-xs">
-                                    {name.split(' ').map((n: string) => n[0]).join('')}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <PlanAvatar
+                                  src={profileImage || undefined}
+                                  plan={memberPlan}
+                                  fallback={<span className="text-xs">{name.split(' ').map((n: string) => n[0]).join('')}</span>}
+                                  size="sm"
+                                />
                                 <span>{name}</span>
                               </div>
                             )
@@ -1509,6 +1510,7 @@ export default function ProjectPage() {
                                 currentUserId={user?.auth_user_id}
                                 isDragging={snapshot.isDragging}
                                 isRecentlyDropped={lastDroppedId === task.task_id}
+                                teamMembers={teamMembers}
                               />
                             </div>
                           )}
@@ -1560,6 +1562,7 @@ export default function ProjectPage() {
                                 currentUserId={user?.auth_user_id}
                                 isDragging={snapshot.isDragging}
                                 isRecentlyDropped={lastDroppedId === task.task_id}
+                                teamMembers={teamMembers}
                               />
                             </div>
                           )}
@@ -1611,6 +1614,7 @@ export default function ProjectPage() {
                                 currentUserId={user?.auth_user_id}
                                 isDragging={snapshot.isDragging}
                                 isRecentlyDropped={lastDroppedId === task.task_id}
+                                teamMembers={teamMembers}
                               />
                             </div>
                           )}
@@ -1649,7 +1653,8 @@ function TaskCard({
   getPriorityLabel,
   currentUserId,
   isDragging,
-  isRecentlyDropped
+  isRecentlyDropped,
+  teamMembers
 }: {
   task: Task
   onStatusChange: (id: number, status: number) => void
@@ -1663,6 +1668,7 @@ function TaskCard({
   currentUserId?: string
   isDragging?: boolean
   isRecentlyDropped?: boolean
+  teamMembers: any[]
 }) {
   const daysDiff = getDaysDiff(task.due_date)
   const isOverdue = daysDiff !== null && daysDiff < 0
@@ -1840,16 +1846,18 @@ function TaskCard({
           })
           return assignees.length > 0 && (
             <div className="flex items-center -space-x-2">
-              {assignees.slice(0, 3).map((assignee: any, idx: number) => (
-                <Avatar key={idx} className="size-7 border-2 border-background ring-1 ring-muted">
-                  {assignee.profileImage ? (
-                    <AvatarImage src={assignee.profileImage} alt={assignee.name} />
-                  ) : null}
-                  <AvatarFallback className="text-[10px] bg-primary/10">
-                    {assignee.name.split(' ').map((n: string) => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
+              {assignees.slice(0, 3).map((assignee: any, idx: number) => {
+                const memberPlan = teamMembers.find((m: any) => m.auth_user_id === assignee.userId)?.plan
+                return (
+                  <PlanAvatar
+                    key={idx}
+                    src={assignee.profileImage || undefined}
+                    plan={memberPlan}
+                    fallback={<span className="text-[10px] bg-primary/10">{assignee.name.split(' ').map((n: string) => n[0]).join('')}</span>}
+                    size="sm"
+                  />
+                )
+              })}
               {assignees.length > 3 && (
                 <div className="size-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-semibold">
                   +{assignees.length - 3}

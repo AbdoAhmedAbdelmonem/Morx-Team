@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/middleware/auth';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { ApiResponse } from '@/lib/types';
+import { getPlanLimit } from '@/lib/constants/plans';
+import { PlanType } from '@/lib/types';
 
 /**
  * Get user's usage stats: teams created, projects, member counts per team
@@ -13,6 +15,16 @@ export async function GET(request: NextRequest) {
 
   try {
     const authUserId = user.id;
+
+    // Get user's plan to determine member limits
+    const { data: userData } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('auth_user_id', authUserId)
+      .single();
+    
+    const userPlan = (userData?.plan || 'free') as PlanType;
+    const planLimit = getPlanLimit(userPlan);
 
     // Get teams where user is owner (teams they created)
     const { data: ownedMemberships, error: teamsError } = await supabase
@@ -26,7 +38,7 @@ export async function GET(request: NextRequest) {
     const teamIds = ownedMemberships?.map(t => t.team_id) || [];
     
     // Get team details and member counts efficiently
-    let teamsWithStats = [];
+    let teamsWithStats: { team_id: number; team_name: string; team_url: string; member_count: number; member_limit: number }[] = [];
     
     if (teamIds.length > 0) {
       // Fetch team names and URLs
@@ -49,7 +61,7 @@ export async function GET(request: NextRequest) {
       teamsWithStats = (teams || []).map(team => ({
         ...team,
         member_count: countMap[team.team_id] || 0,
-        member_limit: 15
+        member_limit: planLimit
       }));
     }
 

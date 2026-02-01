@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/middleware/auth';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { ApiResponse } from '@/lib/types';
+import { canAddMember, getPlanLimit } from '@/lib/constants/plans';
 
 /**
  * Get team members
@@ -58,7 +59,7 @@ export async function GET(
     const memberIds = members?.map((m: any) => m.auth_user_id) || [];
     const { data: users } = await supabase
       .from('users')
-      .select('auth_user_id, first_name, last_name, email, profile_image')
+      .select('auth_user_id, first_name, last_name, email, profile_image, plan')
       .in('auth_user_id', memberIds);
 
     const userMap: Record<string, any> = {};
@@ -162,6 +163,32 @@ export async function POST(
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'User is already a team member' },
         { status: 400 }
+      );
+    }
+
+    // Check member limit based on team owner's plan
+    const { data: teamWithOwner } = await supabase
+      .from('teams')
+      .select('created_by')
+      .eq('team_id', team.team_id)
+      .single();
+
+    const { data: ownerData } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('auth_user_id', teamWithOwner?.created_by)
+      .single();
+
+    const { count: memberCount } = await supabase
+      .from('team_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('team_id', team.team_id);
+
+    if (!canAddMember(memberCount || 0, ownerData?.plan)) {
+      const limit = getPlanLimit(ownerData?.plan);
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: `Team has reached the maximum of ${limit} members for the ${ownerData?.plan || 'free'} plan. Upgrade to add more members.` },
+        { status: 403 }
       );
     }
 
