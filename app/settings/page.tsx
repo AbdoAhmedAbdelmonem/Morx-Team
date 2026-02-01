@@ -316,6 +316,13 @@ export default function SettingsPage() {
     }
   }, [])
 
+  // Redirect unauthenticated users to signin
+  useEffect(() => {
+    if (!isAuthLoading && !authUser) {
+      window.location.href = "/signin"
+    }
+  }, [authUser, isAuthLoading])
+
   // Plan data
   const planData = {
     name: "Free",
