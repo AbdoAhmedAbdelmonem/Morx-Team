@@ -36,13 +36,15 @@ export function Footer() {
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           <div className="space-y-4">
             <div className="flex items-center gap-2 font-bold group">
-              <Image 
-                src={theme === "light" ? "/Morx-dark.png" : "/Morx.png"} 
-                alt="Morx" 
-                width={32} 
-                height={32} 
-                className="size-8 transition-transform group-hover:rotate-12" 
-              />
+              <div className="relative size-8 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+                <Image 
+                  src="/Morx upscaled.png" 
+                  alt="Morx" 
+                  width={32} 
+                  height={32} 
+                  className="size-full object-cover transition-transform group-hover:scale-110" 
+                />
+              </div>
               <span className="rock-salt group-hover:text-primary transition-colors">Morx</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
