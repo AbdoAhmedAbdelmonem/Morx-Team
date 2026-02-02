@@ -170,6 +170,111 @@ export async function POST(
   }
 }
 
+// PUT /api/templates/[templateId] - Update a custom template
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { templateId: string } }
+) {
+  const user = await requireAuth(request);
+  if (user instanceof NextResponse) return user;
+
+  try {
+    const templateId = params.templateId;
+    const authUserId = user.id;
+    const body = await request.json();
+    const { template_name, description, category, tasks } = body;
+
+    // Check if template exists and user is the creator
+    const { data: template, error: fetchError } = await supabase
+      .from('task_templates')
+      .select('template_id, auth_user_id, is_builtin')
+      .eq('template_id', templateId)
+      .single();
+
+    if (fetchError || !template) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Template not found' },
+        { status: 404 }
+      );
+    }
+
+    if (template.is_builtin) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Cannot edit built-in templates' },
+        { status: 403 }
+      );
+    }
+
+    if (template.auth_user_id !== authUserId) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Only template creator can edit it' },
+        { status: 403 }
+      );
+    }
+
+    // Validate input
+    if (!template_name || template_name.trim() === '') {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Template name is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'At least one task is required' },
+        { status: 400 }
+      );
+    }
+
+    // Update template details
+    const { error: updateError } = await supabase
+      .from('task_templates')
+      .update({
+        template_name: template_name.trim(),
+        description: description?.trim() || null,
+        category: category || null,
+      })
+      .eq('template_id', templateId);
+
+    if (updateError) throw updateError;
+
+    // Delete existing tasks
+    const { error: deleteTasksError } = await supabase
+      .from('template_tasks')
+      .delete()
+      .eq('template_id', templateId);
+
+    if (deleteTasksError) throw deleteTasksError;
+
+    // Insert new tasks
+    const tasksToInsert = tasks.map((task: any, index: number) => ({
+      template_id: parseInt(templateId),
+      task_title: task.title?.trim() || task.task_title?.trim(),
+      task_description: task.description?.trim() || task.task_description?.trim() || null,
+      suggested_priority: task.priority || task.suggested_priority || 'medium',
+      order_index: index,
+    }));
+
+    const { error: insertTasksError } = await supabase
+      .from('template_tasks')
+      .insert(tasksToInsert);
+
+    if (insertTasksError) throw insertTasksError;
+
+    return NextResponse.json<ApiResponse>({
+      success: true,
+      data: { message: 'Template updated successfully' },
+    });
+  } catch (error: any) {
+    console.error('Error updating template:', error);
+    return NextResponse.json<ApiResponse>(
+      { success: false, error: error.message || 'Failed to update template' },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE /api/templates/[templateId] - Delete a custom template
 export async function DELETE(
   request: NextRequest,

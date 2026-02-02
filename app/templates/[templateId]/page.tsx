@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -38,7 +40,10 @@ import {
   ListTodo,
   Rocket,
   AlertCircle,
-  Trash2
+  Trash2,
+  Pencil,
+  Plus,
+  Wand2
 } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -148,6 +153,16 @@ export default function TemplateDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  
+  // Edit template state
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editCategory, setEditCategory] = useState('')
+  const [editTasks, setEditTasks] = useState<{title: string, description: string, priority: string}[]>([])
+  const [saving, setSaving] = useState(false)
+  const [generatingDescription, setGeneratingDescription] = useState(false)
+  const [suggestingTasks, setSuggestingTasks] = useState(false)
 
   // Get current user ID
   useEffect(() => {
@@ -321,6 +336,195 @@ export default function TemplateDetailPage() {
     }
   }
 
+  const openEditDialog = () => {
+    if (template) {
+      setEditName(template.template_name)
+      setEditDescription(template.description || '')
+      setEditCategory(template.category || '')
+      setEditTasks(template.tasks.map(t => ({
+        title: t.task_title,
+        description: t.task_description || '',
+        priority: t.suggested_priority || 'medium'
+      })))
+      setEditDialogOpen(true)
+    }
+  }
+
+  const addEditTask = () => {
+    setEditTasks([...editTasks, { title: '', description: '', priority: 'medium' }])
+  }
+
+  const removeEditTask = (index: number) => {
+    if (editTasks.length > 1) {
+      setEditTasks(editTasks.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateEditTask = (index: number, field: 'title' | 'description' | 'priority', value: string) => {
+    const updated = [...editTasks]
+    updated[index][field] = value
+    setEditTasks(updated)
+  }
+
+  const handleSaveTemplate = async () => {
+    if (!editName.trim()) {
+      toast.error('Template name is required')
+      return
+    }
+
+    const validTasks = editTasks.filter(t => t.title.trim())
+    if (validTasks.length === 0) {
+      toast.error('At least one task is required')
+      return
+    }
+
+    try {
+      setSaving(true)
+      const res = await fetch(`/api/templates/${templateId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          template_name: editName.trim(),
+          description: editDescription.trim() || null,
+          category: editCategory || null,
+          tasks: validTasks
+        })
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        toast.success('Template updated successfully!')
+        setEditDialogOpen(false)
+        fetchTemplate()
+      } else {
+        toast.error(data.error || 'Failed to update template')
+      }
+    } catch (error) {
+      console.error('Error updating template:', error)
+      toast.error('Failed to update template')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleGenerateEditDescription = async () => {
+    if (!editName.trim()) {
+      toast.error('Please enter a template name first')
+      return
+    }
+
+    if (!currentUserId) {
+      toast.error('Please sign in to use this feature')
+      return
+    }
+
+    try {
+      setGeneratingDescription(true)
+      
+      const prompt = `Generate a concise, professional description (2-3 sentences max) for a task template named "${editName}"${editCategory ? ` in the ${editCategory} category` : ''}. The description should explain what the template is for and who would benefit from using it. Return ONLY the description text, no quotes or extra formatting.`
+
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          max_tokens: 150,
+          userId: currentUserId
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.limitReached) {
+        toast.error(result.error || 'Daily limit reached. Try again tomorrow!')
+        return
+      }
+      
+      if (result.success && result.data) {
+        const cleanedDescription = result.data.replace(/^"|"$/g, '').trim()
+        setEditDescription(cleanedDescription)
+        toast.success('Description generated successfully!')
+      } else {
+        toast.error(result.error || 'Failed to generate description')
+      }
+    } catch (error) {
+      console.error('Error generating description:', error)
+      toast.error('An error occurred while generating description')
+    } finally {
+      setGeneratingDescription(false)
+    }
+  }
+
+  const handleSuggestEditTasks = async () => {
+    if (!editName.trim()) {
+      toast.error('Please enter a template name first')
+      return
+    }
+
+    if (!currentUserId) {
+      toast.error('Please sign in to use this feature')
+      return
+    }
+
+    try {
+      setSuggestingTasks(true)
+      
+      const prompt = `Suggest 5 practical tasks for a template named "${editName}"${editCategory ? ` in the ${editCategory} category` : ''}${editDescription ? `. Description: ${editDescription}` : ''}.
+
+Respond with ONLY a JSON array in this exact format (no markdown, no explanation):
+[{"title": "Task title", "description": "Brief description", "priority": "low|medium|high|urgent"}]
+
+Make the tasks practical, actionable, and logically ordered.`
+
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          max_tokens: 500,
+          userId: currentUserId
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.limitReached) {
+        toast.error(result.error || 'Daily limit reached. Try again tomorrow!')
+        return
+      }
+      
+      if (result.success && result.data) {
+        try {
+          const cleanedResponse = result.data.replace(/```json\n?|\n?```/g, '').trim()
+          const suggestedTasks = JSON.parse(cleanedResponse)
+          
+          if (Array.isArray(suggestedTasks) && suggestedTasks.length > 0) {
+            const formattedTasks = suggestedTasks.map((task: any) => ({
+              title: task.title || '',
+              description: task.description || '',
+              priority: ['low', 'medium', 'high', 'urgent'].includes(task.priority) ? task.priority : 'medium'
+            }))
+            setEditTasks(formattedTasks)
+            toast.success(`Suggested ${formattedTasks.length} tasks successfully!`)
+          } else {
+            toast.error('Invalid response format')
+          }
+        } catch (parseError) {
+          console.error('Parse error:', parseError, result.data)
+          toast.error('Failed to parse task suggestions')
+        }
+      } else {
+        toast.error(result.error || 'Failed to suggest tasks')
+      }
+    } catch (error) {
+      console.error('Error suggesting tasks:', error)
+      toast.error('An error occurred while suggesting tasks')
+    } finally {
+      setSuggestingTasks(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -431,6 +635,17 @@ export default function TemplateDetailPage() {
               <Star className="size-4" />
               Rate Template
             </Button>
+            {isCreator && !template.is_builtin && (
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="gap-2"
+                onClick={openEditDialog}
+              >
+                <Pencil className="size-4" />
+                Edit Template
+              </Button>
+            )}
             {isCreator && !template.is_builtin && (
               <Button 
                 variant="destructive" 
@@ -639,6 +854,163 @@ export default function TemplateDetailPage() {
                     <Trash2 className="size-4 mr-2" />
                     Delete
                   </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Template Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Template</DialogTitle>
+              <DialogDescription>
+                Update your template details and tasks
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-sm font-medium mb-2 block">Template Name *</label>
+                  <Input
+                    placeholder="e.g., Website Launch Checklist"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium">Description</label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateEditDescription}
+                      disabled={generatingDescription || !editName.trim()}
+                      className="gap-1.5 h-7 text-xs bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30 hover:border-purple-500/50 text-purple-600 dark:text-purple-400"
+                    >
+                      {generatingDescription ? (
+                        <>
+                          <Loader2 className="size-3 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="size-3" />
+                          AI Generate
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <Textarea
+                    placeholder="Describe what this template is for..."
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Category</label>
+                  <Select value={editCategory} onValueChange={setEditCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Development">Development</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Design">Design</SelectItem>
+                      <SelectItem value="Product">Product</SelectItem>
+                      <SelectItem value="Business">Business</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium">Tasks *</label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSuggestEditTasks}
+                      disabled={suggestingTasks || !editName.trim()}
+                      className="gap-1.5 h-8 text-xs bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30 hover:border-purple-500/50 text-purple-600 dark:text-purple-400"
+                    >
+                      {suggestingTasks ? (
+                        <>
+                          <Loader2 className="size-3 animate-spin" />
+                          Suggesting...
+                        </>
+                      ) : (
+                        <>
+                          <ListTodo className="size-3" />
+                          AI Suggest Tasks
+                        </>
+                      )}
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={addEditTask}>
+                      <Plus className="size-3 mr-1" /> Add Task
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {editTasks.map((task, index) => (
+                    <div key={index} className="flex gap-2 items-start p-3 border rounded-lg bg-muted/30">
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          placeholder={`Task ${index + 1} title`}
+                          value={task.title}
+                          onChange={(e) => updateEditTask(index, 'title', e.target.value)}
+                        />
+                        <Input
+                          placeholder="Description (optional)"
+                          value={task.description}
+                          onChange={(e) => updateEditTask(index, 'description', e.target.value)}
+                        />
+                      </div>
+                      <Select 
+                        value={task.priority} 
+                        onValueChange={(v) => updateEditTask(index, 'priority', v)}
+                      >
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeEditTask(index)}
+                        disabled={editTasks.length === 1}
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveTemplate} disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
                 )}
               </Button>
             </DialogFooter>
