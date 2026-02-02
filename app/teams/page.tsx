@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FCDS_SUBJECTS, TEAM_PURPOSES } from "@/lib/constants/subjects"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
+import { AIDescriptionButton } from "@/components/ui/ai-description-button"
 
 export default function TeamsPage() {
   const router = useRouter()
@@ -294,7 +295,20 @@ export default function TeamsPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="teamDescription" className="text-sm">Description (Optional)</Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="teamDescription" className="text-sm">Description (Optional)</Label>
+                          <AIDescriptionButton
+                            context={{
+                              type: 'team',
+                              name: newTeamName,
+                              userName: user?.first_name || '',
+                              purpose: purpose || undefined,
+                              subject: subject || undefined
+                            }}
+                            onGenerated={(desc) => setNewTeamDescription(desc)}
+                            disabled={!newTeamName.trim()}
+                          />
+                        </div>
                         <Textarea
                           id="teamDescription"
                           placeholder="A team for managing marketing campaigns and assets"
@@ -538,7 +552,18 @@ export default function TeamsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-team-description" className="text-sm">Description</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="edit-team-description" className="text-sm">Description</Label>
+                  <AIDescriptionButton
+                    context={{
+                      type: 'team',
+                      name: editTeamName,
+                      userName: user?.first_name || '',
+                    }}
+                    onGenerated={(desc) => setEditTeamDescription(desc)}
+                    disabled={!editTeamName.trim()}
+                  />
+                </div>
                 <Textarea
                   id="edit-team-description"
                   placeholder="Describe what this team is working on..."

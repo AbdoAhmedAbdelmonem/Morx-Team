@@ -25,6 +25,7 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Trash2, Crown, Shield, User, Globe, Lock, Check, X, Copy, LogOut, Users, Settings2, GraduationCap, MoreVertical, BarChart3, Plus } from "lucide-react"
 import { FCDS_SUBJECTS, TEAM_PURPOSES } from "@/lib/constants/subjects"
+import { AIDescriptionButton } from "@/components/ui/ai-description-button"
 
 import SignupRequired from "@/components/signup-required"
 
@@ -479,7 +480,20 @@ export default function TeamSettingsPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="description">Team Description</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="description">Team Description</Label>
+                      <AIDescriptionButton
+                        context={{
+                          type: 'team',
+                          name: team?.team_name || '',
+                          userName: user?.first_name || '',
+                          purpose: purpose || undefined,
+                          subject: subject || undefined
+                        }}
+                        onGenerated={(desc) => setEditDescription(desc)}
+                        disabled={!team?.team_name}
+                      />
+                    </div>
                     <Textarea
                       id="description"
                       placeholder="Describe your team..."
