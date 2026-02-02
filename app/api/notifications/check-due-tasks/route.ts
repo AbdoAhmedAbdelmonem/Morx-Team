@@ -74,7 +74,9 @@ export async function POST(request: NextRequest) {
             auth_user_id: assignment.auth_user_id,
             title: '⏰ Task Due Soon',
             message: `Task "${decodeContent(task.title)}" in project "${projectMap[task.project_id]}" is due in ${hoursUntilDue} hours`,
-            task_id: task.task_id
+            task_id: task.task_id,
+            related_id: task.task_id,
+            type: 'task_due'
           });
           notificationsCreated++;
         }

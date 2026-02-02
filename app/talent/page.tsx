@@ -8,10 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { Search, Users, Star, MessageSquare, Briefcase, Filter, X } from "lucide-react"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { toast } from "sonner"
@@ -135,8 +135,8 @@ export default function TalentMarketplace() {
               <p className="text-muted-foreground text-lg text-arabic">Find talent and build your dream team</p>
             </div>
             <div className="flex items-center gap-3">
-               <Badge variant="outline" className="px-3 py-1 text-sm bg-primary/5 text-primary border-primary/20">
-                {talent.length>1 ? talent.length-1 : talent.length} Members Available
+               <Badge variant="outline" className="px-4 py-1.5 text-sm bg-primary/10 text-primary border-primary/30 backdrop-blur-sm shadow-sm font-bold">
+                {filteredTalent.length} {filteredTalent.length === 1 ? 'Member' : 'Members'} Available
                </Badge>
             </div>
           </div>
@@ -211,12 +211,17 @@ export default function TalentMarketplace() {
                   <div className="h-2 bg-gradient-to-r from-primary/40 to-primary/10" />
                   <CardHeader className="pb-4">
                     <div className="flex items-start gap-4">
-                      <Avatar className="size-16 border-2 border-primary/10">
-                        <AvatarImage src={member.profile_image} />
-                        <AvatarFallback className="text-xl bg-primary/5 text-primary">
-                          {member.first_name?.[0]}{member.last_name?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
+                      <PlanAvatar
+                        src={member.profile_image}
+                        alt={member.first_name || ''}
+                        plan={member.plan}
+                        fallback={
+                          <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold">
+                            {member.first_name?.[0]}{member.last_name?.[0]}
+                          </div>
+                        }
+                        size="xl"
+                      />
                       <div className="flex-1 min-w-0">
                         <CardTitle className="text-xl font-bold truncate group-hover:text-primary transition-colors">
                           {member.first_name} {member.last_name}
@@ -228,21 +233,30 @@ export default function TalentMarketplace() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex-1 space-y-4">
-                    <p className="text-sm text-muted-foreground line-clamp-3 italic min-h-[60px]">
-                      "{member.bio || "No bio provided. This member is ready for new challenges!"}"
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {member.skills && Array.isArray(member.skills) && member.skills.length > 0 ? (
-                        member.skills.slice(0, 6).map((skill: string, idx: number) => (
-                          <Badge key={idx} variant="secondary" className="text-[10px] uppercase font-bold tracking-wider py-0.5 px-2 bg-muted/50 border-none">
-                            {skill}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-xs text-muted-foreground italic">No specific skills listed</span>
-                      )}
-                      {member.skills?.length > 6 && <Badge variant="outline" className="text-[10px]">+{member.skills.length - 6} more</Badge>}
+                  <CardContent className="flex-1 space-y-5">
+                    <div className="relative">
+                      <p className="text-sm text-muted-foreground line-clamp-3 italic min-h-[60px] leading-relaxed">
+                        "{member.bio || "No bio provided. This member is ready for new challenges!"}"
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-1">Top Skills</p>
+                        <div className="flex flex-wrap gap-1.5">
+                        {member.skills && Array.isArray(member.skills) && member.skills.length > 0 ? (
+                            member.skills.slice(0, 5).map((skill: string, idx: number) => (
+                            <Badge key={idx} variant="outline" className="text-[10px] uppercase font-bold tracking-wider py-0.5 px-2 bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
+                                {skill}
+                            </Badge>
+                            ))
+                        ) : (
+                            <span className="text-xs text-muted-foreground/60 italic px-1">No specific skills listed</span>
+                        )}
+                        {member.skills?.length > 5 && (
+                            <Badge variant="outline" className="text-[10px] text-primary font-bold border-none">
+                            +{member.skills.length - 5} MORE
+                            </Badge>
+                        )}
+                        </div>
                     </div>
                   </CardContent>
                   <CardFooter className="pt-0 pb-6 pr-6">
@@ -255,7 +269,7 @@ export default function TalentMarketplace() {
                            else setSelectedUser(null);
                          }}>
                            <DialogTrigger asChild>
-                             <Button size="sm" className="bg-primary hover:bg-primary/90 shadow-md">
+                             <Button size="sm" className="bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white shadow-[0_4px_14px_0_rgba(0,186,124,0.39)] transition-all duration-300 font-bold px-6">
                                Invite to Team
                              </Button>
                            </DialogTrigger>

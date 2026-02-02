@@ -13,7 +13,7 @@ import { createClient } from "@/lib/supabase/client"
 interface Notification {
   notification_id: number
   auth_user_id: string
-  type?: 'task_due' | 'profile_update' | 'team_added'
+  type?: string
   title: string
   message: string
   related_id: number | null
@@ -155,6 +155,20 @@ export function NotificationPanel({ userId }: NotificationPanelProps) {
         return '👤'
       case 'team_added':
         return '👥'
+      case 'team_join_request':
+        return '🤝'
+      case 'team_request_declined':
+        return '❌'
+      case 'team_invitation':
+        return '📩'
+      case 'task_assigned':
+        return '📝'
+      case 'task_date_changed':
+        return '📅'
+      case 'task_completed':
+        return '✅'
+      case 'task_priority_changed':
+        return '⚡'
       default:
         return '🔔'
     }

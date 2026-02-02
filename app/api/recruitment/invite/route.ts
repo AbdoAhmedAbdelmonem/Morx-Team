@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       auth_user_id: target_auth_user_id,
       title: '📩 New Team Invitation',
       message: `You have been invited to join team "${team?.team_name || 'unknown'}". Check your invitations to respond.`,
-      type: 'team_added',
+      type: 'team_invitation',
       is_read: false
     });
 

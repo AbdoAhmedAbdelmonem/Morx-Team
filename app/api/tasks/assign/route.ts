@@ -122,10 +122,12 @@ export async function POST(request: NextRequest) {
             
             const notifications = newlyAssignedUsers.map((assignedUserId: string) => ({
               auth_user_id: assignedUserId,
-              title: 'New Task Assigned',
+              title: '📝 New Task Assigned',
               message: `You've been assigned to "${decodeContent(taskDetails.title)}" in project "${projectName}"`,
               task_id: task_id,
-              is_read: 0
+              related_id: task_id,
+              type: 'task_assigned',
+              is_read: false
             }));
 
             await supabase.from('notifications').insert(notifications);

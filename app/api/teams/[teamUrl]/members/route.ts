@@ -199,6 +199,29 @@ export async function POST(
       role: role || 'member'
     });
 
+    // Notify user
+    try {
+      const requesterUserInfo = await supabase
+        .from('users')
+        .select('first_name, last_name')
+        .eq('auth_user_id', authUserId)
+        .single();
+      
+      const adminName = requesterUserInfo.data 
+        ? `${requesterUserInfo.data.first_name} ${requesterUserInfo.data.last_name || ''}`.trim()
+        : 'An administrator';
+
+      await supabase.from('notifications').insert({
+        auth_user_id: userToAdd.auth_user_id,
+        title: '🎉 Added to Team',
+        message: `You have been added to team "${team.team_name}" by ${adminName}.`,
+        type: 'team_added',
+        is_read: false
+      });
+    } catch (notifError) {
+      console.error('Failed to send notification for direct team addition:', notifError);
+    }
+
     return NextResponse.json<ApiResponse>(
       {
         success: true,

@@ -214,23 +214,37 @@ export async function POST(request: NextRequest) {
 
       await supabase.from('task_assignments').insert(assignments);
 
-      // Send notifications to newly assigned users
+      // 1. Send "New Task Assigned" notification to all assignees
+      const assignmentNotifications = assigned_to.map((assignedAuthUserId: string) => ({
+        auth_user_id: assignedAuthUserId,
+        title: '📝 New Task Assigned',
+        message: `You've been assigned to "${decodeContent(title)}" in project "${project.project_name}"`,
+        task_id: newTask.task_id,
+        related_id: newTask.task_id,
+        type: 'task_assigned',
+        is_read: false
+      }));
+
+      await supabase.from('notifications').insert(assignmentNotifications);
+
+      // 2. Also send "Due Soon" alert if it's within 24h
       if (due_date) {
         const dueTime = new Date(due_date).getTime();
         const now = Date.now();
         const hoursUntilDue = (dueTime - now) / (1000 * 60 * 60);
 
         if (hoursUntilDue > 0 && hoursUntilDue <= 24) {
-          const notifications = assigned_to.map((assignedAuthUserId: string) => ({
+          const dueNotifications = assigned_to.map((assignedAuthUserId: string) => ({
             auth_user_id: assignedAuthUserId,
             title: '⏰ Task Due Soon',
-            message: `Task "${decodeContent(title)}" in project "${project.project_name}" is due in ${Math.round(hoursUntilDue)} hours`,
+            message: `Task "${decodeContent(title)}" is due in ${Math.round(hoursUntilDue)} hours`,
             task_id: newTask.task_id,
+            related_id: newTask.task_id,
             type: 'task_due',
             is_read: false
           }));
 
-          await supabase.from('notifications').insert(notifications);
+          await supabase.from('notifications').insert(dueNotifications);
         }
       }
     }
@@ -380,6 +394,8 @@ export async function PATCH(request: NextRequest) {
               title: '📅 Due Date Changed',
               message: `Task "${taskTitle}" due date changed to ${formattedDate}`,
               task_id: task_id,
+              related_id: task_id,
+              type: 'task_date_changed',
               is_read: false
             });
           });
@@ -393,6 +409,8 @@ export async function PATCH(request: NextRequest) {
               title: '✅ Task Completed',
               message: `Task "${taskTitle}" in "${project.project_name}" has been marked as done`,
               task_id: task_id,
+              related_id: task_id,
+              type: 'task_completed',
               is_read: false
             });
           });
@@ -409,6 +427,8 @@ export async function PATCH(request: NextRequest) {
               title: '⚡ Priority Changed',
               message: `Task "${taskTitle}" priority changed to ${newPriorityLabel}`,
               task_id: task_id,
+              related_id: task_id,
+              type: 'task_priority_changed',
               is_read: false
             });
           });
