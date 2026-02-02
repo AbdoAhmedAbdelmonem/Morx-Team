@@ -129,7 +129,7 @@ export default function BrowseTeamsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 py-6 sm:py-8 md:py-12 bg-muted/40">
+      <main className="flex-1 py-6 sm:py-8 md:py-12 bg-muted/200">
         <div className="container px-4 sm:px-6 lg:px-8">
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center gap-3 mb-2">
