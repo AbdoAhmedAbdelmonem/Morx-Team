@@ -390,6 +390,12 @@ export default function TeamDetailPage() {
                     {projects.length} project{projects.length !== 1 ? 's' : ''}
                   </span>
                   <Badge variant="secondary" className="capitalize">{team.role}</Badge>
+                  {team.subject && (
+                    <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                      <GraduationCap className="size-3 mr-1" />
+                      {team.subject}
+                    </Badge>
+                  )}
                 </div>
               </div>
               

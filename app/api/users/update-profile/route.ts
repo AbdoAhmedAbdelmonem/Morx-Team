@@ -13,7 +13,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { first_name, last_name, password, study_level, department, faculty, bio, skills, is_available } = body;
+    const { first_name, last_name, password, study_level, department, faculty, bio, skills, is_available, links } = body;
 
     if (!first_name || !last_name) {
       return NextResponse.json<ApiResponse>(
@@ -57,12 +57,20 @@ export async function PUT(request: NextRequest) {
       updates.is_available = is_available;
     }
 
+    if (links !== undefined) {
+      // Store links as JSON - ensure it's a valid object
+      // If the column expects an array, wrap it; otherwise store as object
+      updates.links = links;
+    }
+
+    console.log('[Update Profile] Updates to apply:', updates);
+
     // Execute update using auth_user_id from session
     const { data: updatedUser, error: updateError } = await supabase
       .from('users')
       .update(updates)
       .eq('auth_user_id', user.id)
-      .select('auth_user_id, first_name, last_name, email, profile_image, study_level, department, faculty, bio, skills, is_available, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, study_level, department, faculty, bio, skills, is_available, links, created_at')
       .single();
 
     if (updateError) throw updateError;

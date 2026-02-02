@@ -40,8 +40,8 @@ export function Footer() {
                 <Image 
                   src="/Morx upscaled.png" 
                   alt="Morx" 
-                  width={32} 
-                  height={32} 
+                  width={28} 
+                  height={28} 
                   className="size-full object-cover transition-transform group-hover:scale-110" 
                 />
               </div>
