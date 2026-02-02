@@ -192,7 +192,6 @@ export default function TalentMarketplace() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
-                      <SelectItem value="General">General</SelectItem>
                       {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
                         <SelectItem key={code} value={code}>{name}</SelectItem>
                       ))}
