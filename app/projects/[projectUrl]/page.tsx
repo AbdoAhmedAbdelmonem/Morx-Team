@@ -30,6 +30,7 @@ import TaskDocEditor from "@/components/TaskDocEditor"
 import { decodeTask, decodeComment } from "@/lib/utils/contentDecoding"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
+import { AIDescriptionButton } from "@/components/ui/ai-description-button"
 
 interface Task {
   task_id: number
@@ -772,7 +773,18 @@ export default function ProjectPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="taskDesc">Description</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="taskDesc">Description</Label>
+                        <AIDescriptionButton
+                          context={{
+                            type: 'task',
+                            name: newTaskTitle,
+                            teamName: project?.team_name || '',
+                          }}
+                          onGenerated={(desc) => setNewTaskDesc(desc)}
+                          disabled={!newTaskTitle.trim()}
+                        />
+                      </div>
                       <Textarea
                         id="taskDesc"
                         placeholder="Describe the task..."
@@ -934,7 +946,18 @@ export default function ProjectPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="editTaskDesc">Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="editTaskDesc">Description</Label>
+                    <AIDescriptionButton
+                      context={{
+                        type: 'task',
+                        name: newTaskTitle,
+                        teamName: project?.team_name || '',
+                      }}
+                      onGenerated={(desc) => setNewTaskDesc(desc)}
+                      disabled={!newTaskTitle.trim()}
+                    />
+                  </div>
                   <Textarea
                     id="editTaskDesc"
                     placeholder="Describe the task..."
@@ -1437,7 +1460,18 @@ export default function ProjectPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-project-description">Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="edit-project-description">Description</Label>
+                    <AIDescriptionButton
+                      context={{
+                        type: 'project',
+                        name: editProjectName,
+                        teamName: project?.team_name || '',
+                      }}
+                      onGenerated={(desc) => setEditProjectDescription(desc)}
+                      disabled={!editProjectName.trim()}
+                    />
+                  </div>
                   <Textarea
                     id="edit-project-description"
                     placeholder="Describe what this project is about..."

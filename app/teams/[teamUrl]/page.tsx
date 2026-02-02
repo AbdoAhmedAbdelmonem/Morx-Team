@@ -23,6 +23,7 @@ import TemplateLibrary from "@/components/template-library"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { toast } from "sonner"
 import SignupRequired from "@/components/signup-required"
+import { AIDescriptionButton } from "@/components/ui/ai-description-button"
 
 export default function TeamDetailPage() {
   const router = useRouter()
@@ -453,7 +454,18 @@ export default function TeamDetailPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="projectDesc" className="text-sm">Description (optional)</Label>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="projectDesc" className="text-sm">Description (optional)</Label>
+                            <AIDescriptionButton
+                              context={{
+                                type: 'project',
+                                name: newProjectName,
+                                teamName: team?.team_name || '',
+                              }}
+                              onGenerated={(desc) => setNewProjectDesc(desc)}
+                              disabled={!newProjectName.trim()}
+                            />
+                          </div>
                           <Textarea
                             id="projectDesc"
                             placeholder="Describe your project..."
