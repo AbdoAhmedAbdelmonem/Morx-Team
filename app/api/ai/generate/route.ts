@@ -3,13 +3,25 @@ import { createClient } from '@supabase/supabase-js'
 
 // General-purpose AI generation endpoint
 // Uses OpenRouter or Gemini API
-// Rate limited to 10 requests per user per day
+// Rate limited based on user plan
 
-const DAILY_LIMIT = 10
+// Plan-based daily limits
+const PLAN_LIMITS: { [key: string]: number } = {
+  free: 5,
+  starter: 10,
+  professional: 20,
+  enterprise: -1, // Unlimited
+}
 
 // Helper to get today's date key
 function getTodayKey(): string {
   return new Date().toISOString().split('T')[0] // YYYY-MM-DD
+}
+
+// Helper to get user's plan limit
+function getPlanLimit(plan: string | null): number {
+  if (!plan) return PLAN_LIMITS.free
+  return PLAN_LIMITS[plan.toLowerCase()] ?? PLAN_LIMITS.free
 }
 
 export async function POST(request: NextRequest) {
@@ -39,43 +51,62 @@ export async function POST(request: NextRequest) {
       const supabase = createClient(supabaseUrl, supabaseKey)
       const today = getTodayKey()
 
-      // Check current usage
-      const { data: usage, error: usageError } = await supabase
-        .from('ai_usage')
-        .select('request_count')
-        .eq('user_id', userId)
-        .eq('date', today)
+      // Get user's plan
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('auth_user_id', userId)
         .single()
 
-      if (usageError && usageError.code !== 'PGRST116') {
-        console.error('Error checking usage:', usageError)
+      if (userError && userError.code !== 'PGRST116') {
+        console.error('Error fetching user plan:', userError)
       }
 
-      const currentCount = usage?.request_count || 0
+      const userPlan = userData?.plan || 'free'
+      const dailyLimit = getPlanLimit(userPlan)
 
-      if (currentCount >= DAILY_LIMIT) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: `Daily limit reached (${DAILY_LIMIT} requests). Try again tomorrow!`,
-            limitReached: true,
-            remaining: 0
-          },
-          { status: 429 }
-        )
-      }
-
-      // Update usage count
-      if (usage) {
-        await supabase
+      // Check current usage (skip for enterprise/unlimited)
+      if (dailyLimit !== -1) {
+        const { data: usage, error: usageError } = await supabase
           .from('ai_usage')
-          .update({ request_count: currentCount + 1 })
+          .select('request_count')
           .eq('user_id', userId)
           .eq('date', today)
-      } else {
-        await supabase
-          .from('ai_usage')
-          .insert({ user_id: userId, date: today, request_count: 1 })
+          .single()
+
+        if (usageError && usageError.code !== 'PGRST116') {
+          console.error('Error checking usage:', usageError)
+        }
+
+        const currentCount = usage?.request_count || 0
+
+        if (currentCount >= dailyLimit) {
+          const planName = userPlan.charAt(0).toUpperCase() + userPlan.slice(1)
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: `Daily limit reached (${dailyLimit} requests for ${planName} plan). Upgrade your plan for more requests!`,
+              limitReached: true,
+              remaining: 0,
+              plan: userPlan,
+              limit: dailyLimit
+            },
+            { status: 429 }
+          )
+        }
+
+        // Update usage count
+        if (usage) {
+          await supabase
+            .from('ai_usage')
+            .update({ request_count: currentCount + 1 })
+            .eq('user_id', userId)
+            .eq('date', today)
+        } else {
+          await supabase
+            .from('ai_usage')
+            .insert({ user_id: userId, date: today, request_count: 1 })
+        }
       }
     }
 

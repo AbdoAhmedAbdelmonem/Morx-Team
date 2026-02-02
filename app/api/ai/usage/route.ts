@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const DAILY_LIMIT = 10
+// Plan-based daily limits (must match generate/route.ts)
+const PLAN_LIMITS: { [key: string]: number } = {
+  free: 5,
+  starter: 10,
+  professional: 20,
+  enterprise: -1, // Unlimited
+}
 
 // Helper to get today's date key
 function getTodayKey(): string {
   return new Date().toISOString().split('T')[0] // YYYY-MM-DD
+}
+
+// Helper to get user's plan limit
+function getPlanLimit(plan: string | null): number {
+  if (!plan) return PLAN_LIMITS.free
+  return PLAN_LIMITS[plan.toLowerCase()] ?? PLAN_LIMITS.free
 }
 
 export async function GET(request: NextRequest) {
@@ -27,15 +39,32 @@ export async function GET(request: NextRequest) {
         success: true,
         data: {
           used: 0,
-          limit: DAILY_LIMIT,
-          remaining: DAILY_LIMIT,
-          date: getTodayKey()
+          limit: PLAN_LIMITS.free,
+          remaining: PLAN_LIMITS.free,
+          date: getTodayKey(),
+          plan: 'free',
+          unlimited: false
         }
       })
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey)
     const today = getTodayKey()
+
+    // Get user's plan
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('auth_user_id', userId)
+      .single()
+
+    if (userError && userError.code !== 'PGRST116') {
+      console.error('Error fetching user plan:', userError)
+    }
+
+    const userPlan = userData?.plan || 'free'
+    const dailyLimit = getPlanLimit(userPlan)
+    const isUnlimited = dailyLimit === -1
 
     // Get current usage
     const { data: usage, error } = await supabase
@@ -50,15 +79,17 @@ export async function GET(request: NextRequest) {
     }
 
     const used = usage?.request_count || 0
-    const remaining = Math.max(0, DAILY_LIMIT - used)
+    const remaining = isUnlimited ? -1 : Math.max(0, dailyLimit - used)
 
     return NextResponse.json({
       success: true,
       data: {
         used,
-        limit: DAILY_LIMIT,
+        limit: isUnlimited ? -1 : dailyLimit,
         remaining,
-        date: today
+        date: today,
+        plan: userPlan,
+        unlimited: isUnlimited
       }
     })
 
