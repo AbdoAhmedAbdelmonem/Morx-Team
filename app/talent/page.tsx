@@ -192,6 +192,7 @@ export default function TalentMarketplace() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
+                      <SelectItem value="General">General</SelectItem>
                       {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
                         <SelectItem key={code} value={code}>{name}</SelectItem>
                       ))}
@@ -252,9 +253,24 @@ export default function TalentMarketplace() {
                         size="xl"
                       />
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-xl font-bold truncate group-hover:text-primary transition-colors">
-                          {member.first_name} {member.last_name}
-                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-xl font-bold truncate group-hover:text-primary transition-colors">
+                            {member.first_name} {member.last_name}
+                          </CardTitle>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0 ${
+                              member.plan === 'enterprise' ? 'bg-red-500/10 text-red-500 border-red-500/30' :
+                              member.plan === 'professional' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' :
+                              member.plan === 'starter' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' :
+                              'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                            }`}
+                          >
+                            {member.plan === 'enterprise' ? 'Enterprise' : 
+                             member.plan === 'professional' ? 'Pro' : 
+                             member.plan === 'starter' ? 'Starter' : 'Free'}
+                          </Badge>
+                        </div>
                         <CardDescription className="flex items-center gap-1 mt-1 text-sm font-medium text-primary/80">
                           <Star className="size-3 fill-primary/20" /> 
                           {(member.department && DEPARTMENT_NAMES[member.department]) || member.department || "General"} • Level {member.study_level || "?"}
