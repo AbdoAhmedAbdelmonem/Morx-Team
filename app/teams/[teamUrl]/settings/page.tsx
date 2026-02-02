@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   DropdownMenu,
@@ -842,17 +843,26 @@ export default function TeamSettingsPage() {
                   {members.map((member) => (
                     <div key={member.auth_user_id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-lg gap-3">
                       <div className="flex items-center gap-4 min-w-0 flex-1">
-                        <Avatar className="size-10 shrink-0">
-                          {member.profile_image && (
-                            <AvatarImage src={member.profile_image} alt={member.first_name} />
-                          )}
-                          <AvatarFallback>
-                            {member.first_name?.[0]}{member.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
+                        <PlanAvatar 
+                          src={member.profile_image} 
+                          fallback={`${member.first_name?.[0] || ''}${member.last_name?.[0] || ''}`}
+                          plan={member.plan || 'free'}
+                          className="size-10 shrink-0"
+                        />
                         <div className="min-w-0 flex-1">
-                          <div className="font-medium flex items-center gap-2 truncate">
+                          <div className="font-medium inline-flex items-center gap-1.5 truncate">
                             {member.first_name} {member.last_name}
+                            <Badge 
+                              variant="outline" 
+                              className={`text-[10px] px-1.5 py-0 capitalize shrink-0 ${
+                                member.plan === 'enterprise' ? 'border-red-500 text-red-600' :
+                                member.plan === 'professional' ? 'border-blue-500 text-blue-600' :
+                                member.plan === 'starter' ? 'border-yellow-500 text-yellow-600' :
+                                'border-emerald-500 text-emerald-600'
+                              }`}
+                            >
+                              {member.plan || 'free'}
+                            </Badge>
                             {member.auth_user_id === user?.auth_user_id && (
                               <Badge variant="outline" className="text-xs shrink-0">You</Badge>
                             )}
