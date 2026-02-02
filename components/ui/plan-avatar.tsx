@@ -62,8 +62,8 @@ export function PlanAvatar({
         boxSizing: 'border-box'
       } : undefined}
     >
-      {src && <AvatarImage src={src} alt={alt} />}
-      <AvatarFallback>{fallback}</AvatarFallback>
+      <AvatarImage src={src || undefined} alt={alt} />
+      <AvatarFallback className="bg-transparent">{fallback}</AvatarFallback>
     </Avatar>
   )
 }

@@ -77,15 +77,17 @@ export function Header() {
       <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-7xl pointer-events-none">
         <div className="pointer-events-auto h-16 rounded-full border border-border/40 backdrop-blur-xl bg-background/20">
           <div className="container flex h-full items-center justify-between px-6">
-            <Link href="/" className="flex items-center gap-2 font-bold focus:outline-none">
-              <Image 
-                src={theme === "light" ? "/Morx-dark.png" : "/Morx.png"} 
-                alt="Morx" 
-                width={40} 
-                height={40} 
-                className="size-10" 
-              />
-              <span className="text-xl rock-salt">Morx</span>
+            <Link href="/" className="flex items-center gap-2 font-bold focus:outline-none group">
+              <div className="relative size-9 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+                <Image 
+                  src="/Morx upscaled.png" 
+                  alt="Morx" 
+                  width={40} 
+                  height={40} 
+                  className="size-full object-cover transition-transform group-hover:scale-110" 
+                />
+              </div>
+              <span className="text-xl rock-salt group-hover:text-primary transition-colors">Morx</span>
             </Link>
             <div className="flex items-center gap-4">
               <div className="size-5" />
@@ -107,13 +109,15 @@ export function Header() {
       >
         <div className="container flex h-full items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2 font-bold group focus:outline-none">
-            <Image 
-              src={theme === "light" ? "/Morx-dark.png" : "/Morx.png"} 
-              alt="Morx" 
-              width={40} 
-              height={40} 
-              className="size-10 transition-transform group-hover:rotate-12" 
-            />
+            <div className="relative size-9 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+              <Image 
+                src="/Morx upscaled.png" 
+                alt="Morx" 
+                width={36} 
+                height={36} 
+                className="size-full object-cover transition-transform group-hover:scale-110" 
+              />
+            </div>
             <span className="text-xl rock-salt group-hover:text-primary transition-colors">Morx</span>
           </Link>
           

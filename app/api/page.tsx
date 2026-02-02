@@ -87,7 +87,7 @@ export default function ApiPage() {
                   <Terminal className="size-4" /> Morx API v1.0
                 </div>
                 <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none">
-                  Build with the <span className="text-primary underline decoration-primary/30 underline-offset-8">Morx</span> Core.
+                  Build with the <span className="text-primary rock-salt decoration-primary/30 underline-offset-8">Morx</span> Core.
                 </h1>
                 <p className="text-xl text-neutral-400 leading-relaxed max-w-2xl">
                   Integrate Morx powerful team management and analytics directly into your own workflow. 
@@ -209,3 +209,4 @@ export default function ApiPage() {
     </div>
   )
 }
+
