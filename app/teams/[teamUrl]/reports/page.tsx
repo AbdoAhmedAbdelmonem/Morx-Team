@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Download, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertCircle, Users, FolderKanban, Calendar, FileText, BarChart3, PieChart, Activity, Sparkles, Wand2, Brain, Zap, ChevronRight } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { ChartCard } from "@/components/chart-card"
 import { StatsCard } from "@/components/stats-card"
 import { motion, AnimatePresence } from "framer-motion"
@@ -306,7 +306,8 @@ export default function TeamReportsPage() {
         name: topPerformer.name,
         rate: topPerformer.completion_rate,
         stats: `${topPerformer.completed_tasks}/${topPerformer.assigned_tasks} tasks`,
-        image: topPerformer.profile_image
+        image: topPerformer.profile_image,
+        plan: topPerformer.plan
       } : null
     }
   }
@@ -434,7 +435,7 @@ export default function TeamReportsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 py-6 bg-muted/40">
+      <main className="flex-1 py-6 bg-muted/200">
         <div className="container px-4 md:px-6">
           {/* Header */}
           <div className="mb-6">
@@ -722,13 +723,33 @@ export default function TeamReportsPage() {
                     {reportData.member_performance.map((member: any, index: number) => (
                       <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4">
                         <div className="flex items-center gap-3 flex-1">
-                          <Avatar>
-                            <AvatarImage src={member.profile_image} />
-                            <AvatarFallback>{member.name ? member.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : '??'}</AvatarFallback>
-                          </Avatar>
+                          <PlanAvatar
+                            src={member.profile_image}
+                            alt={member.name}
+                            plan={member.plan}
+                            fallback={
+                              <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold">
+                                {member.name ? member.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : '??'}
+                              </div>
+                            }
+                            size="md"
+                          />
                           <div>
                             <p className="font-medium">{member.name}</p>
-                            <p className="text-sm text-muted-foreground">{member.role}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {member.role}
+                              <span className="mx-1.5">·</span>
+                              <span className={
+                                member.plan === 'enterprise' ? 'text-red-500' :
+                                member.plan === 'professional' ? 'text-blue-500' :
+                                member.plan === 'starter' ? 'text-yellow-500' :
+                                'text-emerald-500'
+                              }>
+                                {member.plan === 'enterprise' ? 'Enterprise' : 
+                                 member.plan === 'professional' ? 'Professional' : 
+                                 member.plan === 'starter' ? 'Starter' : 'Free'} Plan
+                              </span>
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-around sm:justify-end">
@@ -937,12 +958,13 @@ export default function TeamReportsPage() {
                                 </div>
                                 <div className="relative flex items-center gap-4">
                                   <div className="relative">
-                                    <Avatar className="size-14 border-2 border-yellow-400 shadow-md">
-                                      <AvatarImage src={data.topPerformer.image} />
-                                      <AvatarFallback className="bg-yellow-200 text-yellow-800 font-bold">
-                                        {data.topPerformer.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
+                                    <PlanAvatar
+                                      src={data.topPerformer.image}
+                                      fallback={data.topPerformer.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                      plan={data.topPerformer.plan}
+                                      size="lg"
+                                      className="ring-4 ring-yellow-400/50"
+                                    />
                                     <motion.div 
                                       animate={{ y: [0, -4, 0] }}
                                       transition={{ repeat: Infinity, duration: 2 }}
