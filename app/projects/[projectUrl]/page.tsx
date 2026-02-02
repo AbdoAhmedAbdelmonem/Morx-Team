@@ -18,7 +18,7 @@ import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, ArrowLeft, MoreVertical, Trash2, Calendar, User, AlertCircle, CheckCircle2, Clock, Settings, Edit, MessageSquare, Paperclip, Send, X, Download, Heart, ChevronDown, Check, LayoutGrid, CalendarDays } from "lucide-react"
+import { Plus, ArrowLeft, MoreVertical, Trash2, Calendar, User, AlertCircle, CheckCircle2, Clock, Settings, Edit, MessageSquare, Paperclip, Send, X, Download, Heart, ChevronDown, Check, LayoutGrid, CalendarDays, Sparkles, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import TaskCalendar from "@/components/TaskCalendar"
 import { LiveClock } from "@/components/LiveClock"
@@ -107,6 +107,11 @@ export default function ProjectPage() {
 
   // View mode state
   const [viewMode, setViewMode] = useState<'kanban' | 'calendar'>('kanban')
+
+  // AI Task Suggestions state
+  const [aiSuggestionsOpen, setAiSuggestionsOpen] = useState(false)
+  const [aiSuggestionsLoading, setAiSuggestionsLoading] = useState(false)
+  const [aiSuggestions, setAiSuggestions] = useState<{title: string; description: string; priority: number}[]>([])
 
   useEffect(() => {
     // Auth is now managed by useAuth context
@@ -242,6 +247,91 @@ export default function ProjectPage() {
     // Persist to database
     handleUpdateTaskStatus(taskId, newStatus);
   };
+
+  // AI Task Suggestions handler
+  const handleAiSuggestTasks = async () => {
+    if (!project || !user?.auth_user_id) return
+    
+    setAiSuggestionsLoading(true)
+    setAiSuggestionsOpen(true)
+    
+    try {
+      const existingTasks = tasks.map(t => t.title).join(', ') || 'None'
+      
+      const prompt = `You are a project management AI. Based on the following project details, suggest 5 NEW tasks that would help complete this project.
+
+PROJECT DETAILS:
+- Name: ${project.project_name}
+- Description: ${project.description || 'No description'}
+- Team: ${project.team_name || 'Unknown'}
+
+EXISTING TASKS (avoid duplicates):
+${existingTasks}
+
+Respond with ONLY a JSON array in this exact format (no markdown, no explanation):
+[
+  {"title": "Task title here", "description": "Brief description", "priority": 2},
+  {"title": "Another task", "description": "Description", "priority": 1}
+]
+
+Priority: 1=Low, 2=Medium, 3=High
+Make the tasks specific, actionable, and relevant to the project. Each task should be different from existing tasks.`
+
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          max_tokens: 600,
+          userId: user.auth_user_id
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.limitReached) {
+        toast.error(result.error || "Daily limit reached. Try again tomorrow!")
+        setAiSuggestionsOpen(false)
+        return
+      }
+      
+      if (result.success && result.data) {
+        try {
+          const cleanedResponse = result.data.replace(/```json\n?|\n?```/g, '').trim()
+          const parsed = JSON.parse(cleanedResponse)
+          
+          if (Array.isArray(parsed)) {
+            setAiSuggestions(parsed.slice(0, 5))
+          } else {
+            toast.error("AI returned unexpected format")
+            setAiSuggestionsOpen(false)
+          }
+        } catch (parseError) {
+          console.error('Parse error:', parseError, result.data)
+          toast.error("Failed to parse AI response")
+          setAiSuggestionsOpen(false)
+        }
+      } else {
+        toast.error(result.error || "AI suggestions failed")
+        setAiSuggestionsOpen(false)
+      }
+    } catch (error) {
+      console.error('AI Suggest error:', error)
+      toast.error("An error occurred")
+      setAiSuggestionsOpen(false)
+    } finally {
+      setAiSuggestionsLoading(false)
+    }
+  }
+
+  // Use AI suggestion to fill task form
+  const useSuggestion = (suggestion: {title: string; description: string; priority: number}) => {
+    setNewTaskTitle(suggestion.title)
+    setNewTaskDesc(suggestion.description)
+    setNewTaskPriority(suggestion.priority.toString())
+    setAiSuggestionsOpen(false)
+    setIsCreateDialogOpen(true)
+  }
 
   const handleCreateTask = async () => {
     if (!newTaskTitle.trim() || !project || !user?.auth_user_id) return
@@ -749,6 +839,21 @@ export default function ProjectPage() {
                       <Edit className="size-4" />
                     </Button>
                   )}
+
+                {/* AI Task Suggestions Button */}
+                <Button 
+                  variant="outline" 
+                  className="gap-2 border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/10 text-purple-700 dark:text-purple-400"
+                  onClick={handleAiSuggestTasks}
+                  disabled={aiSuggestionsLoading}
+                >
+                  {aiSuggestionsLoading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-4" />
+                  )}
+                  <span className="hidden sm:inline">AI Suggest</span>
+                </Button>
                 
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
@@ -1436,6 +1541,87 @@ export default function ProjectPage() {
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsTaskDetailsOpen(false)}>Close</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* AI Task Suggestions Dialog */}
+          <Dialog open={aiSuggestionsOpen} onOpenChange={setAiSuggestionsOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="size-5 text-purple-500" />
+                  AI Task Suggestions
+                </DialogTitle>
+                <DialogDescription>
+                  AI-generated task ideas based on your project. Click any suggestion to use it.
+                </DialogDescription>
+              </DialogHeader>
+              
+              {aiSuggestionsLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="size-8 animate-spin text-purple-500 mb-4" />
+                  <p className="text-muted-foreground">Analyzing your project...</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {aiSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="p-4 border rounded-lg hover:border-purple-500/50 hover:bg-purple-500/5 cursor-pointer transition-all group"
+                      onClick={() => useSuggestion(suggestion)}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <h4 className="font-medium group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
+                            {suggestion.title}
+                          </h4>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {suggestion.description}
+                          </p>
+                        </div>
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "shrink-0",
+                            suggestion.priority === 3 && "border-red-500 text-red-500",
+                            suggestion.priority === 2 && "border-yellow-500 text-yellow-500",
+                            suggestion.priority === 1 && "border-green-500 text-green-500"
+                          )}
+                        >
+                          {suggestion.priority === 3 ? 'High' : suggestion.priority === 2 ? 'Medium' : 'Low'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                        <Plus className="size-3" />
+                        <span>Click to add this task</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAiSuggestionsOpen(false)}>
+                  Close
+                </Button>
+                <Button 
+                  onClick={handleAiSuggestTasks} 
+                  disabled={aiSuggestionsLoading}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  {aiSuggestionsLoading ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 size-4" />
+                      Regenerate
+                    </>
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

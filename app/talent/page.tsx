@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { PlanAvatar } from "@/components/ui/plan-avatar"
-import { Search, Users, Star, MessageSquare, Briefcase, Filter, X, ExternalLink } from "lucide-react"
+import { Search, Users, Star, MessageSquare, Briefcase, Filter, X, ExternalLink, Sparkles, Loader2 } from "lucide-react"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { toast } from "sonner"
 
@@ -64,6 +64,12 @@ export default function TalentMarketplace() {
   const [inviteMessage, setInviteMessage] = useState("")
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [sendingInvite, setSendingInvite] = useState(false)
+
+  // AI Match state
+  const [aiMatchActive, setAiMatchActive] = useState(false)
+  const [aiMatchLoading, setAiMatchLoading] = useState(false)
+  const [aiMatchedIds, setAiMatchedIds] = useState<string[]>([])
+  const [aiMatchReason, setAiMatchReason] = useState<string>("")
 
   useEffect(() => {
     const storedSession = localStorage.getItem('student_session')
@@ -141,7 +147,116 @@ export default function TalentMarketplace() {
     }
   }
 
+  const handleAiMatch = async () => {
+    if (myTeams.length === 0) {
+      toast.error("You need to be an owner or admin of at least one team to use AI Match")
+      return
+    }
+
+    try {
+      setAiMatchLoading(true)
+      
+      // Gather team requirements
+      const teamRequirements = myTeams.map(team => ({
+        name: team.team_name,
+        required_skills: team.required_skills || [],
+        purpose: team.purpose || '',
+        subject: team.subject || '',
+        tags: team.tags || []
+      })).filter(t => t.required_skills.length > 0 || t.purpose || t.subject)
+
+      if (teamRequirements.length === 0) {
+        toast.error("Your teams don't have any requirements set. Add required skills in team settings first.")
+        setAiMatchLoading(false)
+        return
+      }
+
+      // Build prompt for AI
+      const prompt = `You are a talent matching AI. Based on the following team requirements, analyze and rank candidates.
+
+TEAM REQUIREMENTS:
+${teamRequirements.map(t => `
+Team: ${t.name}
+- Required Skills: ${t.required_skills.join(', ') || 'None specified'}
+- Purpose: ${t.purpose || 'Not specified'}
+- Subject/Field: ${t.subject || 'Not specified'}
+- Tags: ${t.tags.join(', ') || 'None'}
+`).join('\n')}
+
+AVAILABLE CANDIDATES:
+${talent.filter(t => t.auth_user_id !== user?.auth_user_id).map(t => `
+ID: ${t.auth_user_id}
+Name: ${t.first_name} ${t.last_name}
+Department: ${t.department || 'General'}
+Level: ${t.study_level || 'Unknown'}
+Skills: ${t.skills?.join(', ') || 'None listed'}
+Bio: ${t.bio || 'No bio'}
+`).join('\n')}
+
+Respond with ONLY a JSON object in this exact format (no markdown, no explanation):
+{"matched_ids": ["id1", "id2", ...], "reason": "Brief explanation of why these candidates match"}
+
+Select the TOP candidates (up to 10) who best match the team requirements. Consider skill overlap, relevant experience, and field alignment.`
+
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          max_tokens: 500,
+          userId: user?.auth_user_id
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.limitReached) {
+        toast.error(result.error || "Daily limit reached. Try again tomorrow!")
+        setAiMatchLoading(false)
+        return
+      }
+      
+      if (result.success && result.data) {
+        try {
+          // Parse the AI response
+          const cleanedResponse = result.data.replace(/```json\n?|\n?```/g, '').trim()
+          const parsed = JSON.parse(cleanedResponse)
+          
+          if (parsed.matched_ids && Array.isArray(parsed.matched_ids)) {
+            setAiMatchedIds(parsed.matched_ids)
+            setAiMatchReason(parsed.reason || "Matched based on team requirements")
+            setAiMatchActive(true)
+            toast.success(`Found ${parsed.matched_ids.length} matching candidates!`)
+          } else {
+            toast.error("AI returned unexpected format")
+          }
+        } catch (parseError) {
+          console.error('Parse error:', parseError, result.data)
+          toast.error("Failed to parse AI response")
+        }
+      } else {
+        toast.error(result.error || "AI matching failed")
+      }
+    } catch (error) {
+      console.error('AI Match error:', error)
+      toast.error("An error occurred during AI matching")
+    } finally {
+      setAiMatchLoading(false)
+    }
+  }
+
+  const clearAiMatch = () => {
+    setAiMatchActive(false)
+    setAiMatchedIds([])
+    setAiMatchReason("")
+  }
+
   const filteredTalent = talent.filter(item => {
+    // If AI match is active, only show matched candidates
+    if (aiMatchActive) {
+      return aiMatchedIds.includes(item.auth_user_id) && item.auth_user_id !== user?.auth_user_id
+    }
+
     const matchesSearch = searchQuery === "" || 
       `${item.first_name} ${item.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.bio && item.bio.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -152,6 +267,12 @@ export default function TalentMarketplace() {
       (item.skills && item.skills.some((s: string) => s.toLowerCase().includes(skillFilter.toLowerCase())))
 
     return matchesSearch && matchesDepartment && matchesSkill && item.auth_user_id !== user?.auth_user_id
+  }).sort((a, b) => {
+    // If AI match is active, sort by the order returned by AI
+    if (aiMatchActive) {
+      return aiMatchedIds.indexOf(a.auth_user_id) - aiMatchedIds.indexOf(b.auth_user_id)
+    }
+    return 0
   })
 
   return (
@@ -209,7 +330,33 @@ export default function TalentMarketplace() {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  {(searchQuery || departmentFilter !== "all" || skillFilter) && (
+                  {!aiMatchActive ? (
+                    <Button 
+                      variant="default" 
+                      className="h-10 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-md"
+                      onClick={handleAiMatch}
+                      disabled={aiMatchLoading || myTeams.length === 0}
+                    >
+                      {aiMatchLoading ? (
+                        <>
+                          <Loader2 className="mr-2 size-4 animate-spin" /> Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 size-4" /> AI Match
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      className="h-10 border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950"
+                      onClick={clearAiMatch}
+                    >
+                      <X className="mr-2 size-4" /> Clear AI Match
+                    </Button>
+                  )}
+                  {(searchQuery || departmentFilter !== "all" || skillFilter) && !aiMatchActive && (
                     <Button variant="ghost" className="h-10 text-muted-foreground" onClick={() => {
                         setSearchQuery("");
                         setDepartmentFilter("all");
@@ -222,6 +369,23 @@ export default function TalentMarketplace() {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Match Results Banner */}
+          {aiMatchActive && (
+            <Card className="mb-6 border-purple-500/30 bg-gradient-to-r from-purple-500/10 to-blue-500/10">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="size-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-purple-700 dark:text-purple-400 mb-1">
+                      AI Matched {aiMatchedIds.length} Candidates
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{aiMatchReason}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -253,10 +417,8 @@ export default function TalentMarketplace() {
                         size="xl"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="text-xl font-bold truncate group-hover:text-primary transition-colors">
-                            {member.first_name} {member.last_name}
-                          </CardTitle>
+                        <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors inline-flex items-center gap-1.5">
+                          {member.first_name} {member.last_name}
                           <Badge 
                             variant="outline" 
                             className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0 ${
@@ -270,7 +432,7 @@ export default function TalentMarketplace() {
                              member.plan === 'professional' ? 'Pro' : 
                              member.plan === 'starter' ? 'Starter' : 'Free'}
                           </Badge>
-                        </div>
+                        </CardTitle>
                         <CardDescription className="flex items-center gap-1 mt-1 text-sm font-medium text-primary/80">
                           <Star className="size-3 fill-primary/20" /> 
                           {(member.department && DEPARTMENT_NAMES[member.department]) || member.department || "General"} • Level {member.study_level || "?"}

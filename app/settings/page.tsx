@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTheme } from "next-themes"
 import { useColorTheme } from "@/components/color-theme-provider"
 import { useAuth } from "@/contexts/auth-context"
-import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop, Clock } from "lucide-react"
+import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop, Clock, Sparkles } from "lucide-react"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { PLAN_LIMITS, getPlanLimit, getPlanBorderColor } from "@/lib/constants/plans"
@@ -260,6 +260,14 @@ export default function SettingsPage() {
   } | null>(null)
   const [loadingStats, setLoadingStats] = useState(false)
 
+  // AI Credits state
+  const [aiCredits, setAiCredits] = useState<{
+    used: number;
+    limit: number;
+    remaining: number;
+    date: string;
+  } | null>(null)
+
   // Safe localStorage wrapper
   const safeLocalStorage = {
     getItem: (key: string) => {
@@ -291,6 +299,19 @@ export default function SettingsPage() {
     }
   }
 
+  // Fetch AI Credits usage
+  const fetchAiCredits = async (authUserId: string) => {
+    try {
+      const res = await fetch(`/api/ai/usage?userId=${authUserId}`)
+      const data = await res.json()
+      if (data.success) {
+        setAiCredits(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching AI credits:', error)
+    }
+  }
+
   // Sync profile state when auth user is loaded
   useEffect(() => {
     if (authUser) {
@@ -317,6 +338,7 @@ export default function SettingsPage() {
       
       if (authUser.auth_user_id) {
         fetchUserStats(authUser.auth_user_id)
+        fetchAiCredits(authUser.auth_user_id)
       }
     }
   }, [authUser])
@@ -985,6 +1007,41 @@ export default function SettingsPage() {
                             ))}
                           </div>
                         )}
+
+                        {/* AI Credits Usage */}
+                        <div className="space-y-3">
+                          <h5 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <Sparkles className="size-4 text-purple-500" />
+                            AI Credits (Daily)
+                          </h5>
+                          <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Sparkles className="size-5 text-purple-500" />
+                                <span className="font-medium">AI Requests</span>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {aiCredits ? `${aiCredits.used} / ${aiCredits.limit}` : 'Loading...'}
+                              </span>
+                            </div>
+                            <div className="w-full bg-background/50 rounded-full h-3">
+                              <div
+                                className={`h-3 rounded-full transition-all ${
+                                  aiCredits && aiCredits.remaining === 0
+                                    ? 'bg-destructive'
+                                    : aiCredits && aiCredits.remaining <= 3
+                                      ? 'bg-yellow-500'
+                                      : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                                }`}
+                                style={{ width: `${aiCredits ? (aiCredits.used / aiCredits.limit) * 100 : 0}%` }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>{aiCredits?.remaining ?? 10} credits remaining today</span>
+                              <span>Resets daily at midnight</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">No usage data available</p>
