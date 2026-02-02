@@ -67,9 +67,11 @@ export interface Notification {
   auth_user_id: string;  // Target UUID
   title: string;
   message: string;
-  is_read: number;
+  type?: string;         // Notification category (e.g., 'task_due', 'team_added', etc.)
+  related_id?: number;   // ID of related entity (e.g., task_id, team_id, request_id)
+  is_read: boolean;      // Notification read status
   created_at?: string;
-  task_id?: number;
+  task_id?: number;      // Legacy field, kept for compatibility
 }
 // Auth Request types
 export interface CreateUserRequest {
