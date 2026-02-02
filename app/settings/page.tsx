@@ -20,7 +20,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop, Clock, Sparkles } from "lucide-react"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
-import { PLAN_LIMITS, getPlanLimit, getPlanBorderColor } from "@/lib/constants/plans"
+import { PLAN_LIMITS, getPlanLimit, getPlanBorderColor, getAiDailyLimit } from "@/lib/constants/plans"
 import { PlanType } from "@/lib/types"
 import { toast } from "sonner"
 
@@ -266,6 +266,8 @@ export default function SettingsPage() {
     limit: number;
     remaining: number;
     date: string;
+    plan?: string;
+    unlimited?: boolean;
   } | null>(null)
 
   // Safe localStorage wrapper
@@ -364,10 +366,12 @@ export default function SettingsPage() {
   const userPlan = (user?.plan || 'free') as PlanType
   const planLimit = getPlanLimit(userPlan)
   const planBorderColor = getPlanBorderColor(userPlan)
+  const aiDailyLimit = getAiDailyLimit(userPlan)
 
   const PLAN_FEATURES: Record<PlanType, string[]> = {
     free: [
       "Up to 15 team members",
+      "5 AI requests per day",
       "Unlimited teams",
       "Unlimited projects",
       "Unlimited tasks",
@@ -376,6 +380,7 @@ export default function SettingsPage() {
     ],
     starter: [
       "Up to 50 team members",
+      "10 AI requests per day",
       "Basic analytics",
       "5GB storage",
       "Email support",
@@ -383,6 +388,7 @@ export default function SettingsPage() {
     ],
     professional: [
       "Up to 80 team members",
+      "20 AI requests per day",
       "Advanced analytics",
       "25GB storage",
       "Priority email support",
@@ -391,6 +397,7 @@ export default function SettingsPage() {
     ],
     enterprise: [
       "Unlimited team members",
+      "Unlimited AI requests",
       "Custom analytics",
       "Unlimited storage",
       "24/7 phone & email support",
@@ -413,6 +420,7 @@ export default function SettingsPage() {
     features: PLAN_FEATURES[userPlan],
     limits: {
       teamMembers: planLimit === Infinity ? 'Unlimited' : planLimit,
+      aiRequests: aiDailyLimit === Infinity ? 'Unlimited' : `${aiDailyLimit}/day`,
     }
   }
 
@@ -1021,24 +1029,39 @@ export default function SettingsPage() {
                                 <span className="font-medium">AI Requests</span>
                               </div>
                               <span className="text-sm text-muted-foreground">
-                                {aiCredits ? `${aiCredits.used} / ${aiCredits.limit}` : 'Loading...'}
+                                {aiCredits 
+                                  ? aiCredits.unlimited 
+                                    ? `${aiCredits.used} / Unlimited` 
+                                    : `${aiCredits.used} / ${aiCredits.limit}`
+                                  : 'Loading...'}
                               </span>
                             </div>
-                            <div className="w-full bg-background/50 rounded-full h-3">
-                              <div
-                                className={`h-3 rounded-full transition-all ${
-                                  aiCredits && aiCredits.remaining === 0
-                                    ? 'bg-destructive'
-                                    : aiCredits && aiCredits.remaining <= 3
-                                      ? 'bg-yellow-500'
-                                      : 'bg-gradient-to-r from-purple-500 to-blue-500'
-                                }`}
-                                style={{ width: `${aiCredits ? (aiCredits.used / aiCredits.limit) * 100 : 0}%` }}
-                              />
-                            </div>
+                            {!aiCredits?.unlimited && (
+                              <div className="w-full bg-background/50 rounded-full h-3">
+                                <div
+                                  className={`h-3 rounded-full transition-all ${
+                                    aiCredits && aiCredits.remaining === 0
+                                      ? 'bg-destructive'
+                                      : aiCredits && aiCredits.remaining <= 3
+                                        ? 'bg-yellow-500'
+                                        : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                                  }`}
+                                  style={{ width: `${aiCredits && aiCredits.limit > 0 ? (aiCredits.used / aiCredits.limit) * 100 : 0}%` }}
+                                />
+                              </div>
+                            )}
+                            {aiCredits?.unlimited && (
+                              <div className="w-full bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-full h-3">
+                                <div className="h-3 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 w-full animate-pulse" />
+                              </div>
+                            )}
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{aiCredits?.remaining ?? 10} credits remaining today</span>
-                              <span>Resets daily at midnight</span>
+                              <span>
+                                {aiCredits?.unlimited 
+                                  ? '∞ Unlimited requests' 
+                                  : `${aiCredits?.remaining ?? 5} credits remaining today`}
+                              </span>
+                              <span>{aiCredits?.unlimited ? 'Enterprise Plan' : 'Resets daily at midnight'}</span>
                             </div>
                           </div>
                         </div>

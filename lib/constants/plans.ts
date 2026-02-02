@@ -12,6 +12,17 @@ export const PLAN_LIMITS: Record<PlanType, number> = {
 };
 
 /**
+ * Plan AI daily request limits configuration
+ * Maps each plan to the maximum number of AI requests allowed per day
+ */
+export const AI_DAILY_LIMITS: Record<PlanType, number> = {
+  free: 5,
+  starter: 10,
+  professional: 20,
+  enterprise: Infinity, // Unlimited
+};
+
+/**
  * Plan border colors for profile images
  * Maps each plan to its designated border color
  */
@@ -29,6 +40,15 @@ export const PLAN_BORDER_COLORS: Record<PlanType, string | null> = {
  */
 export function getPlanLimit(plan: PlanType | undefined | null): number {
   return PLAN_LIMITS[plan || 'free'];
+}
+
+/**
+ * Get the AI daily request limit for a given plan
+ * @param plan - The subscription plan type
+ * @returns Maximum number of AI requests allowed per day
+ */
+export function getAiDailyLimit(plan: PlanType | undefined | null): number {
+  return AI_DAILY_LIMITS[plan || 'free'];
 }
 
 /**
