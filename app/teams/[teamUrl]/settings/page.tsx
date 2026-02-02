@@ -245,19 +245,21 @@ export default function TeamSettingsPage() {
     setIsUpdatingSpecialized(true)
     
     try {
+      console.log('[Specialized] Updating with:', { teamType, purpose, subject });
       const res = await fetch(`/api/teams/${teamUrl}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          auth_user_id: user?.auth_user_id,
           team_type: teamType,
           purpose: purpose || "",
           subject: subject || "",
-          tags: subject ? [subject, purpose] : (purpose ? [purpose] : []) // Re-enabled automatic tags
+          tags: subject ? [subject, purpose].filter(Boolean) : (purpose ? [purpose] : [])
         })
       })
       
       const result = await res.json()
+      console.log('[Specialized] Response:', result);
       
       if (result.success) {
         setTeam({ ...team, team_type: teamType, purpose, subject })
@@ -515,8 +517,8 @@ export default function TeamSettingsPage() {
               </Card>
             )}
 
-            {/* Specialized Settings Card - Admin/Owner Only */}
-            {isOwnerOrAdmin && (
+            {/* Specialized Settings Card - Owner Only */}
+            {isOwner && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -524,7 +526,7 @@ export default function TeamSettingsPage() {
                     Specialized Settings
                   </CardTitle>
                   <CardDescription>
-                    Define your team's type and purpose
+                    Define your team's type and purpose (Owner only)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -586,23 +588,33 @@ export default function TeamSettingsPage() {
                                 // Handle 'AI' as an alias for 'IS' (Intelligent Systems)
                                 if (dept === 'AI') dept = 'IS';
 
-                                if (!level || !FCDS_SUBJECTS[level]) {
-                                  return <SelectItem value="Other">Other</SelectItem>;
-                                }
-
-                                const subjectsByDept = FCDS_SUBJECTS[level];
+                                // Collect all available subjects
                                 const relevantSubjects: string[] = [];
 
-                                if (subjectsByDept["General"]) {
-                                  relevantSubjects.push(...subjectsByDept["General"]);
+                                // Add current subject first if it exists (so it always shows)
+                                if (subject && subject !== "Other") {
+                                  relevantSubjects.push(subject);
                                 }
 
-                                if (dept && dept !== "General" && subjectsByDept[dept]) {
-                                  relevantSubjects.push(...subjectsByDept[dept]);
+                                if (level && FCDS_SUBJECTS[level]) {
+                                  const subjectsByDept = FCDS_SUBJECTS[level];
+
+                                  if (subjectsByDept["General"]) {
+                                    subjectsByDept["General"].forEach(s => {
+                                      if (!relevantSubjects.includes(s)) relevantSubjects.push(s);
+                                    });
+                                  }
+
+                                  if (dept && dept !== "General" && subjectsByDept[dept]) {
+                                    subjectsByDept[dept].forEach(s => {
+                                      if (!relevantSubjects.includes(s)) relevantSubjects.push(s);
+                                    });
+                                  }
                                 }
 
-                                if (relevantSubjects.length === 0) {
-                                  return <SelectItem value="Other">Other</SelectItem>;
+                                // Always add "Other" option
+                                if (!relevantSubjects.includes("Other")) {
+                                  relevantSubjects.push("Other");
                                 }
 
                                 return relevantSubjects.map((s) => (

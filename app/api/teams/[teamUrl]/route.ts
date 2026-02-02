@@ -143,8 +143,15 @@ export async function PUT(
     if (is_public !== undefined) updates.is_public = is_public;
     if (team_type !== undefined) updates.team_type = team_type;
     if (purpose !== undefined) updates.purpose = purpose || '';
-    if (subject !== undefined) updates.subject = subject || '';
-    if (tags !== undefined) updates.tags = tags || [];
+    
+    // Subject, tags can only be updated by owner
+    if (subject !== undefined && membership.role === 'owner') {
+      updates.subject = subject || '';
+    }
+    if (tags !== undefined && membership.role === 'owner') {
+      updates.tags = tags || [];
+    }
+    
     if (required_skills !== undefined) updates.required_skills = required_skills || [];
 
     if (Object.keys(updates).length === 0) {
