@@ -40,7 +40,9 @@ import {
   TrendingUp,
   Clock,
   ChevronRight,
-  User
+  User,
+  Wand2,
+  ListTodo
 } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -156,6 +158,10 @@ export default function TemplatesPage() {
   const [creating, setCreating] = useState(false)
   const [showMine, setShowMine] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  
+  // AI Generation states
+  const [generatingDescription, setGeneratingDescription] = useState(false)
+  const [suggestingTasks, setSuggestingTasks] = useState(false)
 
   // Get current user ID
   useEffect(() => {
@@ -297,6 +303,125 @@ export default function TemplatesPage() {
     setNewTemplateTasks([{ title: '', description: '', priority: 'medium' }])
   }
 
+  // AI Generate Description
+  const handleGenerateDescription = async () => {
+    if (!newTemplateName.trim()) {
+      toast.error('Please enter a template name first')
+      return
+    }
+
+    if (!currentUserId) {
+      toast.error('Please sign in to use this feature')
+      return
+    }
+
+    try {
+      setGeneratingDescription(true)
+      
+      const prompt = `Generate a concise, professional description (2-3 sentences max) for a task template named "${newTemplateName}"${newTemplateCategory ? ` in the ${newTemplateCategory} category` : ''}. The description should explain what the template is for and who would benefit from using it. Return ONLY the description text, no quotes or extra formatting.`
+
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          max_tokens: 150,
+          userId: currentUserId
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.limitReached) {
+        toast.error(result.error || 'Daily limit reached. Try again tomorrow!')
+        return
+      }
+      
+      if (result.success && result.data) {
+        const cleanedDescription = result.data.replace(/^"|"$/g, '').trim()
+        setNewTemplateDescription(cleanedDescription)
+        toast.success('Description generated successfully!')
+      } else {
+        toast.error(result.error || 'Failed to generate description')
+      }
+    } catch (error) {
+      console.error('Error generating description:', error)
+      toast.error('An error occurred while generating description')
+    } finally {
+      setGeneratingDescription(false)
+    }
+  }
+
+  // AI Suggest Tasks
+  const handleSuggestTasks = async () => {
+    if (!newTemplateName.trim()) {
+      toast.error('Please enter a template name first')
+      return
+    }
+
+    if (!currentUserId) {
+      toast.error('Please sign in to use this feature')
+      return
+    }
+
+    try {
+      setSuggestingTasks(true)
+      
+      const prompt = `Suggest 5 practical tasks for a template named "${newTemplateName}"${newTemplateCategory ? ` in the ${newTemplateCategory} category` : ''}${newTemplateDescription ? `. Description: ${newTemplateDescription}` : ''}.
+
+Respond with ONLY a JSON array in this exact format (no markdown, no explanation):
+[{"title": "Task title", "description": "Brief description", "priority": "low|medium|high|urgent"}]
+
+Make the tasks practical, actionable, and logically ordered.`
+
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          max_tokens: 500,
+          userId: currentUserId
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.limitReached) {
+        toast.error(result.error || 'Daily limit reached. Try again tomorrow!')
+        return
+      }
+      
+      if (result.success && result.data) {
+        try {
+          const cleanedResponse = result.data.replace(/```json\n?|\n?```/g, '').trim()
+          const suggestedTasks = JSON.parse(cleanedResponse)
+          
+          if (Array.isArray(suggestedTasks) && suggestedTasks.length > 0) {
+            const formattedTasks: TemplateTask[] = suggestedTasks.map((task: any) => ({
+              title: task.title || '',
+              description: task.description || '',
+              priority: ['low', 'medium', 'high', 'urgent'].includes(task.priority) ? task.priority : 'medium'
+            }))
+            setNewTemplateTasks(formattedTasks)
+            toast.success(`Suggested ${formattedTasks.length} tasks successfully!`)
+          } else {
+            toast.error('Invalid response format')
+          }
+        } catch (parseError) {
+          console.error('Parse error:', parseError, result.data)
+          toast.error('Failed to parse task suggestions')
+        }
+      } else {
+        toast.error(result.error || 'Failed to suggest tasks')
+      }
+    } catch (error) {
+      console.error('Error suggesting tasks:', error)
+      toast.error('An error occurred while suggesting tasks')
+    } finally {
+      setSuggestingTasks(false)
+    }
+  }
+
   const openRatingDialog = (template: Template) => {
     setSelectedTemplate(template)
     setUserRating(0)
@@ -384,7 +509,29 @@ export default function TemplatesPage() {
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="text-sm font-medium mb-2 block">Description</label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium">Description</label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateDescription}
+                        disabled={generatingDescription || !newTemplateName.trim()}
+                        className="gap-1.5 h-7 text-xs bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30 hover:border-purple-500/50 text-purple-600 dark:text-purple-400"
+                      >
+                        {generatingDescription ? (
+                          <>
+                            <Loader2 className="size-3 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="size-3" />
+                            AI Generate
+                          </>
+                        )}
+                      </Button>
+                    </div>
                     <Textarea
                       placeholder="Describe what this template is for..."
                       value={newTemplateDescription}
@@ -412,9 +559,31 @@ export default function TemplatesPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-sm font-medium">Tasks *</label>
-                    <Button type="button" variant="outline" size="sm" onClick={addTask}>
-                      <Plus className="size-3 mr-1" /> Add Task
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSuggestTasks}
+                        disabled={suggestingTasks || !newTemplateName.trim()}
+                        className="gap-1.5 h-8 text-xs bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30 hover:border-purple-500/50 text-purple-600 dark:text-purple-400"
+                      >
+                        {suggestingTasks ? (
+                          <>
+                            <Loader2 className="size-3 animate-spin" />
+                            Suggesting...
+                          </>
+                        ) : (
+                          <>
+                            <ListTodo className="size-3" />
+                            AI Suggest Tasks
+                          </>
+                        )}
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={addTask}>
+                        <Plus className="size-3 mr-1" /> Add Task
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-3">
                     {newTemplateTasks.map((task, index) => (
