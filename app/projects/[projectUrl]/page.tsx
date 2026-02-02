@@ -859,7 +859,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 size-4" />
-                    New Task
+                    <span className="hidden sm:inline">New Task</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
@@ -2099,4 +2099,5 @@ function TaskCard({
     </motion.div>
   )
 }
+
 
