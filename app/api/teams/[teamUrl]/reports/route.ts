@@ -115,7 +115,7 @@ export async function GET(
     if (memberIds.length > 0) {
       const { data: users } = await supabase
         .from('users')
-        .select('auth_user_id, first_name, last_name, profile_image')
+        .select('auth_user_id, first_name, last_name, profile_image, plan')
         .in('auth_user_id', memberIds)
       memberUsers = users || []
     }
@@ -143,6 +143,7 @@ export async function GET(
         auth_user_id: user.auth_user_id,
         name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown',
         profile_image: user.profile_image,
+        plan: user.plan || 'free',
         role: memberRole,
         assigned_tasks: assignedTasks.length,
         completed_tasks: completedAssigned,

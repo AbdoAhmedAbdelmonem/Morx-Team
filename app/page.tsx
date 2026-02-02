@@ -99,7 +99,8 @@ export default function LandingPage() {
                 Elevate Your Workflow with <span className="rock-salt">Morx</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Advanced reports and statistics platform that helps teams make data-driven decisions.
+                Advanced reports and statistics platform that helps teams make data-driven decisions,
+                Fully powered by AI and instant processing,
                 Streamline your analytics and focus on what matters most.
               </p>
               <p className="text-sm text-muted-foreground/70 font-mono mb-4">

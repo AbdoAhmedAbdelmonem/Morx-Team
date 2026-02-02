@@ -254,7 +254,7 @@ export default function JoinTeamPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 flex items-center justify-center py-8 bg-muted/40">
+      <main className="flex-1 flex items-center justify-center py-8 bg-muted/200">
         <Card className="max-w-lg mx-4 w-full">
           <CardHeader>
             <div className="flex items-center gap-4 mb-2">
@@ -318,3 +318,4 @@ export default function JoinTeamPage() {
     </div>
   )
 }
+

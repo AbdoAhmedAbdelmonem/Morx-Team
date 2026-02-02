@@ -513,7 +513,7 @@ export default function SettingsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 py-12 bg-muted/40">
+      <main className="flex-1 py-12 bg-muted/200">
         <div className="container px-4 md:px-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight mb-2">
@@ -1135,3 +1135,4 @@ export default function SettingsPage() {
     </div>
   )
 }
+
