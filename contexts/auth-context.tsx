@@ -48,10 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           skills: userData.skills,
           is_available: userData.is_available,
         }
-        console.log('[AuthContext] Extracted user from cookie:', normalizedUser.email, 'ID:', normalizedUser.auth_user_id);
+        // // console.log('[AuthContext] Extracted user from cookie:', normalizedUser.email, 'ID:', normalizedUser.auth_user_id);
         return normalizedUser
       } catch (error) {
-        console.error('Error parsing cookie session:', error)
+        // // console.error('Error parsing cookie session:', error)
       }
     }
 
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // SELF-HEALING: If cookie is missing but localStorage exists, re-hydrate the cookie
         if (!getCookie('morx_session') && userData.auth_user_id) {
-          console.log('[AuthContext] Re-hydrating morx_session cookie from localStorage');
+          // // console.log('[AuthContext] Re-hydrating morx_session cookie from localStorage');
           const cookieData = encodeURIComponent(JSON.stringify(userData));
           // Set cookie for 7 days
           document.cookie = `morx_session=${cookieData}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return normalizedUser
       } catch (error) {
-        console.error('Error parsing session:', error)
+        // // console.error('Error parsing session:', error)
       }
     }
 
@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (e) {
-      console.error('[AuthContext] Profile image sync error:', e)
+      // // console.error('[AuthContext] Profile image sync error:', e)
     }
   };
 
@@ -191,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('[AuthContext] Failed to fetch latest profile:', error)
+      // // console.error('[AuthContext] Failed to fetch latest profile:', error)
     }
   };
 
