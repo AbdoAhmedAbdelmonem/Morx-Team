@@ -1007,7 +1007,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                       {selectedAssignees.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {selectedAssignees.map((userId) => {
-                            const member = teamMembers.find(m => m.user_id === userId)
+                            const member = teamMembers.find(m => m.auth_user_id === userId)
                             if (!member) return null
                             return (
                               <Badge key={userId} variant="secondary" className="gap-1">
@@ -2104,5 +2104,6 @@ function TaskCard({
     </motion.div>
   )
 }
+
 
 
