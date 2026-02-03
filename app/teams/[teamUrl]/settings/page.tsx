@@ -29,6 +29,7 @@ import { FCDS_SUBJECTS, TEAM_PURPOSES } from "@/lib/constants/subjects"
 import { AIDescriptionButton } from "@/components/ui/ai-description-button"
 
 import SignupRequired from "@/components/signup-required"
+import { toast } from "sonner"
 
 export default function TeamSettingsPage() {
   const router = useRouter()
@@ -149,11 +150,10 @@ export default function TeamSettingsPage() {
       if (result.success) {
         fetchMembers()
       } else {
-        alert(result.error || 'Failed to remove member')
+        toast.error(result.error || 'Failed to remove member')
       }
     } catch (error) {
-      console.error('Error removing member:', error)
-      alert('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
     }
   }
 
@@ -174,11 +174,10 @@ export default function TeamSettingsPage() {
       if (result.success) {
         fetchMembers()
       } else {
-        alert(result.error || 'Failed to change role')
+        toast.error(result.error || 'Failed to change role')
       }
     } catch (error) {
-      console.error('Error changing role:', error)
-      alert('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
     }
   }
 
@@ -201,11 +200,10 @@ export default function TeamSettingsPage() {
       if (result.success) {
         setTeam({ ...team, is_public: !team.is_public })
       } else {
-        alert(result.error || 'Failed to update visibility')
+        toast.error(result.error || 'Failed to update visibility')
       }
     } catch (error) {
-      console.error('Error updating visibility:', error)
-      alert('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
     } finally {
       setIsUpdatingVisibility(false)
     }
@@ -229,13 +227,12 @@ export default function TeamSettingsPage() {
       
       if (result.success) {
         setTeam({ ...team, description: editDescription })
-        alert('Description updated successfully')
+        toast.success('Description updated successfully')
       } else {
-        alert(result.error || 'Failed to update description')
+        toast.error(result.error || 'Failed to update description')
       }
     } catch (error) {
-      console.error('Error updating description:', error)
-      alert('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
     } finally {
       setIsUpdatingDescription(false)
     }
@@ -264,13 +261,13 @@ export default function TeamSettingsPage() {
       
       if (result.success) {
         setTeam({ ...team, team_type: teamType, purpose, subject })
-        alert('Specialized settings updated successfully')
+        toast.success('Specialized settings updated successfully')
       } else {
-        alert(result.error || 'Failed to update specialized settings')
+        toast.error(result.error || 'Failed to update specialized settings')
       }
     } catch (error) {
       console.error('Error updating specialized settings:', error)
-      alert('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
     } finally {
       setIsUpdatingSpecialized(false)
     }
@@ -294,13 +291,12 @@ export default function TeamSettingsPage() {
 
       if (result.success) {
         setTeam({ ...team, required_skills: skills })
-        alert('Skills updated successfully')
+        toast.success('Skills updated successfully')
       } else {
-        alert(result.error || 'Failed to update skills')
+        toast.error(result.error || 'Failed to update skills')
       }
     } catch (error) {
-       console.error('Error updating skills:', error)
-       alert('An error occurred. Please try again.')
+       toast.error('An error occurred. Please try again.')
     } finally {
       setIsUpdatingSkills(false)
     }
@@ -337,11 +333,10 @@ export default function TeamSettingsPage() {
           fetchMembers()
         }
       } else {
-        alert(result.error || `Failed to ${action} request`)
+        toast.error(result.error || `Failed to ${action} request`)
       }
     } catch (error) {
-      console.error(`Error ${action}ing request:`, error)
-      alert('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
     }
   }
 
@@ -355,13 +350,13 @@ export default function TeamSettingsPage() {
       const result = await res.json()
       
       if (result.success) {
+        toast.success('You have left the team')
         router.push('/teams')
       } else {
-        alert(result.error || 'Failed to leave team')
+        toast.error(result.error || 'Failed to leave team')
       }
     } catch (error) {
-      console.error('Error leaving team:', error)
-      alert('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
     }
     setIsLeaveDialogOpen(false)
   }
@@ -456,7 +451,7 @@ export default function TeamSettingsPage() {
                           className="sm:w-32"
                           onClick={() => {
                             if (!team?.team_name.trim()) return;
-                            console.log('[Teams Settings] Updating team name:', team.team_name);
+                            toast.info('Updating team name...');
                             fetch(`/api/teams/${teamUrl}`, {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json' },
@@ -466,14 +461,12 @@ export default function TeamSettingsPage() {
                               })
                             }).then(res => res.json()).then(res => {
                               if (res.success) {
-                                alert('Team name updated');
+                                toast.success('Team name updated');
                               } else {
-                                console.error('[Teams Settings] Update name error:', res.error);
-                                alert(res.error || 'Failed to update team name');
+                                toast.error(res.error || 'Failed to update team name');
                               }
                             }).catch(err => {
-                              console.error('[Teams Settings] Network error updating name:', err);
-                              alert('Network error. Please try again.');
+                              toast.error('Network error. Please try again.');
                             });
                           }}
                         >
