@@ -73,8 +73,6 @@ export function NotificationPanel({ userId }: NotificationPanelProps) {
             )
             if (updated.is_read === true) {
               setUnreadCount(prev => Math.max(0, prev - 1))
-            } else if (updated.is_read === false) {
-              setUnreadCount(prev => prev + 1)
             }
           }
         )
@@ -290,4 +288,5 @@ export function NotificationPanel({ userId }: NotificationPanelProps) {
     </Sheet>
   )
 }
+
 
