@@ -350,7 +350,7 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
                   ) : (
                     <Button 
                       variant="outline" 
-                      className="h-10 border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950"
+                      className="h-10 border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950 hover:text-white"
                       onClick={clearAiMatch}
                     >
                       <X className="mr-2 size-4" /> Clear AI Match
