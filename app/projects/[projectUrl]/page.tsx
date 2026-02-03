@@ -840,28 +840,32 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                     </Button>
                   )}
 
-                {/* AI Task Suggestions Button */}
-                <Button 
-                  variant="outline" 
-                  className="gap-2 border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/10 text-purple-700 dark:text-purple-400"
-                  onClick={handleAiSuggestTasks}
-                  disabled={aiSuggestionsLoading}
-                >
-                  {aiSuggestionsLoading ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="size-4" />
-                  )}
-                  <span className="hidden sm:inline">AI Suggest</span>
-                </Button>
-                
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 size-4" />
-                    New Task
+                {/* AI Task Suggestions Button - Only for owners and admins */}
+                {(project.role === 'owner' || project.role === 'admin') && (
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/10 text-purple-700 dark:text-purple-400"
+                    onClick={handleAiSuggestTasks}
+                    disabled={aiSuggestionsLoading}
+                  >
+                    {aiSuggestionsLoading ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="size-4" />
+                    )}
+                    <span className="hidden sm:inline">AI Suggest</span>
                   </Button>
-                </DialogTrigger>
+                )}
+                
+                {/* New Task Button - Only for owners and admins */}
+                {(project.role === 'owner' || project.role === 'admin') && (
+                  <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="sm:mr-2 size-4" />
+                      <span className="hidden sm:inline">New Task</span>
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Create New Task</DialogTitle>
@@ -1028,6 +1032,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+                )}
                 </div>
               </div>
             </div>

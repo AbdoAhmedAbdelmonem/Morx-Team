@@ -188,6 +188,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Only owners and admins can create tasks
+    if (membership.role !== 'owner' && membership.role !== 'admin') {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Only owners and admins can create tasks' },
+        { status: 403 }
+      );
+    }
+
     // Create task
     const { data: newTask, error: createError } = await supabase
       .from('tasks')
