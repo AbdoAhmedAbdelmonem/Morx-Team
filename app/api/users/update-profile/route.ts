@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest) {
       await supabase.from('notifications').insert({
         auth_user_id: user.id,
         title: '👤 Profile Updated',
-        message: `Your profile has been updated successfully. Changes: ${changedFields.join(', ')}`,
+        message: `Your profile has been updated successfully.`,
         type: 'profile_update',
         is_read: false
       });
@@ -111,3 +111,4 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+
