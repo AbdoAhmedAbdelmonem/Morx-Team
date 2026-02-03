@@ -109,9 +109,9 @@ Teams are the heart of Morx. Here's how to make the most of them:
 
 | Role | What You Can Do |
 |------|-----------------|
-| **Owner** | Full control: edit team, manage members, delete team |
-| **Admin** | Manage members, edit settings, create projects |
-| **Member** | Participate in projects, create tasks, comment |
+| **Owner** | Full control: edit team, manage members, create tasks, delete team |
+| **Admin** | Manage members, edit settings, create projects, create tasks |
+| **Member** | Participate in projects, view tasks, comment |
 
 ### Inviting Members
 
