@@ -847,14 +847,14 @@ export default function TeamDetailPage() {
             setIsTemplateDialogOpen(open);
             if (!open) setSelectedProjectForTemplate(null);
           }}>
-            <DialogContent className="max-w-6xl max-h-[90vh] p-0">
-              <DialogHeader className="p-6 pb-0">
+            <DialogContent className="max-w-6xl h-[90vh] p-0 flex flex-col">
+              <DialogHeader className="p-6 pb-4 shrink-0 border-b">
                 <DialogTitle>Browse Templates</DialogTitle>
                 <DialogDescription>
                   Browse and select templates to create new projects
                 </DialogDescription>
               </DialogHeader>
-              <div className="p-6 pt-4">
+              <div className="flex-1 overflow-y-auto px-6 py-4">
                 <TemplateLibrary 
                   team_id={team.team_id}
                   auth_user_id={user?.auth_user_id}
