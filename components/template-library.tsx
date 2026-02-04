@@ -187,7 +187,7 @@ export default function TemplateLibrary({ onTemplateSelect, project_id, auth_use
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header & Filters */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
@@ -247,7 +247,7 @@ export default function TemplateLibrary({ onTemplateSelect, project_id, auth_use
           <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
           {filteredTemplates.map((template) => (
             <Card
               key={template.template_id}
@@ -299,8 +299,8 @@ export default function TemplateLibrary({ onTemplateSelect, project_id, auth_use
 
       {/* Template Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl h-[90vh] flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <FileText className="size-5 text-primary" />
               {previewTemplate?.template_name}
@@ -310,10 +310,10 @@ export default function TemplateLibrary({ onTemplateSelect, project_id, auth_use
             </DialogDescription>
           </DialogHeader>
 
-          <Separator />
+          <Separator className="shrink-0" />
 
-          <ScrollArea className="flex-1 max-h-[500px] pr-4">
-            <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto pr-4">
+            <div className="space-y-4 py-2">
               {/* Template Info */}
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
@@ -366,11 +366,11 @@ export default function TemplateLibrary({ onTemplateSelect, project_id, auth_use
                 </div>
               </div>
             </div>
-          </ScrollArea>
+          </div>
 
-          <Separator />
+          <Separator className="shrink-0" />
 
-          <DialogFooter className="border-t pt-4">
+          <DialogFooter className="border-t pt-4 shrink-0">
             {mode === 'create' || (team_id && !project_id) ? (
               // Create new project mode
               showProjectNameInput ? (
