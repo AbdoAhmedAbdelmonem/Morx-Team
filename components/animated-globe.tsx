@@ -124,6 +124,9 @@ export const AnimatedGlobe = () => {
       const primaryHslRaw = getComputedStyle(root).getPropertyValue('--primary').trim()
       let primaryColor = colorsRef.current.primary
       let glowColor = 'rgba(34, 197, 94, 0.03)'
+      
+      // Check if light mode
+      const isLightMode = root.classList.contains('light')
 
       if (primaryHslRaw) {
         // Tailwind/CSS variables often store HSL as "h s l"
@@ -144,14 +147,14 @@ export const AnimatedGlobe = () => {
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
       ctx.fill()
       
-      // Draw a subtle border
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)'
+      // Draw a subtle border - dark in light mode
+      ctx.strokeStyle = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.05)'
       ctx.lineWidth = 1
       ctx.beginPath()
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
       ctx.stroke()
 
-      // Draw surface points
+      // Draw surface points - dark in light mode
       points.forEach(p => {
         const rotated = rotate(p, rotationY, rotationX)
         const scale = 1000 / (1000 + rotated.z) // perspective
@@ -161,9 +164,15 @@ export const AnimatedGlobe = () => {
         if (rotated.z > -radius) { // depth sorting/culling
             ctx.beginPath()
             ctx.arc(x2d, y2d, (rotated.z > 0 ? 1.2 : 0.8) * scale, 0, Math.PI * 2)
-            ctx.fillStyle = rotated.z > 0 
-                ? 'rgba(255, 255, 255, 0.3)' 
-                : 'rgba(255, 255, 255, 0.1)'
+            if (isLightMode) {
+              ctx.fillStyle = rotated.z > 0 
+                  ? 'rgba(0, 0, 0, 0.15)' 
+                  : 'rgba(0, 0, 0, 0.08)'
+            } else {
+              ctx.fillStyle = rotated.z > 0 
+                  ? 'rgba(255, 255, 255, 0.3)' 
+                  : 'rgba(255, 255, 255, 0.1)'
+            }
             ctx.fill()
         }
       })
