@@ -17,6 +17,13 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-cairo)", "var(--font-noto-arabic)", "var(--font-rubik)", "var(--font-outfit)", "ui-sans-serif", "system-ui"],
+        outfit: ["var(--font-outfit)"],
+        rubik: ["var(--font-rubik)"],
+        cairo: ["var(--font-cairo)"],
+        arabic: ["var(--font-noto-arabic)", "var(--font-cairo)"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
