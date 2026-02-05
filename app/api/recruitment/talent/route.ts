@@ -16,10 +16,29 @@ export async function GET(request: NextRequest) {
     const skill = searchParams.get('skill');
     const department = searchParams.get('department');
 
+    // Get current user's faculty to filter by same college only
+    const { data: currentUser, error: userError } = await supabase
+      .from('users')
+      .select('faculty')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (userError) throw userError;
+
+    // If current user has no faculty set, return empty array
+    if (!currentUser?.faculty) {
+      return NextResponse.json<ApiResponse>({
+        success: true,
+        data: [],
+      });
+    }
+
+    // Query users from the same faculty only
     let query = supabase
       .from('users')
-      .select('auth_user_id, first_name, last_name, email, profile_image, bio, skills, department, study_level, plan, links, searching_teams_subjects')
-      .eq('is_available', true);
+      .select('auth_user_id, first_name, last_name, email, profile_image, bio, skills, department, study_level, plan, links, searching_teams_subjects, faculty')
+      .eq('is_available', true)
+      .eq('faculty', currentUser.faculty); // Filter by same faculty
 
     if (department) {
       query = query.eq('department', department);
