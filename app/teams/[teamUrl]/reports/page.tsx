@@ -15,6 +15,7 @@ import { PlanAvatar } from "@/components/ui/plan-avatar"
 import { ChartCard } from "@/components/chart-card"
 import { StatsCard } from "@/components/stats-card"
 import { motion, AnimatePresence } from "framer-motion"
+import { toast } from "sonner"
 
 const Typewriter = ({ text, delay = 0.03 }: { text: string; delay?: number }) => {
   const characters = text.split("");
@@ -108,11 +109,11 @@ export default function TeamReportsPage() {
         setReportData(result.data)
       } else {
         console.error('Report API error:', result.error)
-        alert(result.error || 'Failed to load reports')
+        toast.error(result.error || 'Failed to load reports')
       }
     } catch (error) {
       console.error('Error fetching report data:', error)
-      alert('Failed to load reports. Please try again.')
+      toast.error('Failed to load reports. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -137,12 +138,13 @@ export default function TeamReportsPage() {
       if (result.success) {
         // Download the report
         window.open(result.data.download_url, '_blank')
+        toast.success('Report generated successfully')
       } else {
-        alert(result.error || 'Failed to generate report')
+        toast.error(result.error || 'Failed to generate report')
       }
     } catch (error) {
       console.error('Error generating report:', error)
-      alert('Failed to generate report')
+      toast.error('Failed to generate report')
     }
   }
 

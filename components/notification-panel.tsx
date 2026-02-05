@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Bell, Check, CheckCheck, X } from "lucide-react"
+import { Bell, Check, CheckCheck, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
+import { toast } from "sonner"
 
 interface Notification {
   notification_id: number
@@ -73,8 +74,24 @@ export function NotificationPanel({ userId }: NotificationPanelProps) {
             )
             if (updated.is_read === true) {
               setUnreadCount(prev => Math.max(0, prev - 1))
-            } else if (updated.is_read === false) {
-              setUnreadCount(prev => prev + 1)
+            }
+            // Removed the else if that was incrementing count on UPDATE
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'notifications',
+            filter: `auth_user_id=eq.${userId}`
+          },
+          (payload) => {
+            // Remove deleted notification from the list
+            const deleted = payload.old as Notification
+            setNotifications(prev => prev.filter(n => n.notification_id !== deleted.notification_id))
+            if (deleted.is_read === false) {
+              setUnreadCount(prev => Math.max(0, prev - 1))
             }
           }
         )
@@ -121,9 +138,13 @@ export function NotificationPanel({ userId }: NotificationPanelProps) {
           prev.map(n => n.notification_id === notificationId ? { ...n, is_read: true } : n)
         )
         setUnreadCount(prev => Math.max(0, prev - 1))
+        toast.success('Notification marked as read')
+      } else {
+        toast.error('Failed to mark notification as read')
       }
     } catch (error) {
       console.error('Error marking notification as read:', error)
+      toast.error('An error occurred')
     }
   }
 
@@ -138,11 +159,37 @@ export function NotificationPanel({ userId }: NotificationPanelProps) {
       if (res.ok) {
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
         setUnreadCount(0)
+        toast.success('All notifications marked as read')
+      } else {
+        toast.error('Failed to mark all as read')
       }
     } catch (error) {
       console.error('Error marking all as read:', error)
+      toast.error('An error occurred')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const deleteNotification = async (notificationId: number) => {
+    try {
+      const res = await fetch(`/api/notifications/${notificationId}`, {
+        method: 'DELETE'
+      })
+
+      if (res.ok) {
+        const notification = notifications.find(n => n.notification_id === notificationId)
+        setNotifications(prev => prev.filter(n => n.notification_id !== notificationId))
+        if (notification && notification.is_read === false) {
+          setUnreadCount(prev => Math.max(0, prev - 1))
+        }
+        toast.success('Notification deleted')
+      } else {
+        toast.error('Failed to delete notification')
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error)
+      toast.error('An error occurred')
     }
   }
 
@@ -259,19 +306,32 @@ export function NotificationPanel({ userId }: NotificationPanelProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <p className="font-medium text-sm">{notification.title}</p>
-                        {notification.is_read === false && (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {notification.is_read === false && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                markAsRead(notification.notification_id)
+                              }}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 flex-shrink-0"
+                            className="h-6 w-6 hover:text-destructive"
                             onClick={(e) => {
                               e.stopPropagation()
-                              markAsRead(notification.notification_id)
+                              deleteNotification(notification.notification_id)
                             }}
                           >
-                            <Check className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        )}
+                        </div>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1 break-words">
                         {notification.message}

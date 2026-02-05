@@ -374,7 +374,41 @@ export async function DELETE(
       );
     }
 
-    // Remove member
+    // Get all projects in this team
+    const { data: teamProjects } = await supabase
+      .from('projects')
+      .select('project_id')
+      .eq('team_id', team.team_id);
+
+    if (teamProjects && teamProjects.length > 0) {
+      const projectIds = teamProjects.map(p => p.project_id);
+
+      // Get all tasks in these projects
+      const { data: teamTasks } = await supabase
+        .from('tasks')
+        .select('task_id')
+        .in('project_id', projectIds);
+
+      if (teamTasks && teamTasks.length > 0) {
+        const taskIds = teamTasks.map(t => t.task_id);
+
+        // Remove task assignments for the leaving user for tasks in this team
+        await supabase
+          .from('task_assignments')
+          .delete()
+          .eq('auth_user_id', targetAuthUserId)
+          .in('task_id', taskIds);
+
+        // Delete task_docs created by this user for tasks in this team
+        await supabase
+          .from('task_docs')
+          .delete()
+          .eq('auth_user_id', targetAuthUserId)
+          .in('task_id', taskIds);
+      }
+    }
+
+    // Remove member from team
     await supabase
       .from('team_members')
       .delete()
