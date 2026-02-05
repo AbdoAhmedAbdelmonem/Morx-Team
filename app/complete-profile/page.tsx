@@ -143,8 +143,16 @@ export default function CompleteProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         className="absolute top-12 left-0 right-0 flex items-center justify-center gap-3"
       >
-        <Image src="/Morx.png" alt="Morx" width={40} height={40} />
-        <span className="text-xl font-black italic tracking-tighter rock-salt underline decoration-primary/50">Morx.</span>
+        <div className="relative size-9 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+          <Image 
+            src="/Morx upscaled.png" 
+            alt="Morx" 
+            width={36} 
+            height={36} 
+            className="size-full object-cover" 
+          />
+        </div>
+        <span className="text-xl font-black italic tracking-tighter rock-salt">Morx</span>
       </motion.div>
 
       <div className="w-full max-w-xl relative">
@@ -290,3 +298,4 @@ export default function CompleteProfilePage() {
     </div>
   )
 }
+
