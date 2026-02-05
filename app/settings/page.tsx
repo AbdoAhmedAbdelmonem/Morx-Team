@@ -19,7 +19,7 @@ import { useColorTheme } from "@/components/color-theme-provider"
 import { useAuth } from "@/contexts/auth-context"
 import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop, Clock, Sparkles } from "lucide-react"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
-import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
+import { DEPARTMENT_NAMES, FCDS_SUBJECTS } from "@/lib/constants/subjects"
 import { PLAN_LIMITS, getPlanLimit, getPlanBorderColor, getAiDailyLimit } from "@/lib/constants/plans"
 import { PlanType } from "@/lib/types"
 import { toast } from "sonner"
@@ -224,23 +224,48 @@ export default function SettingsPage() {
   const [user, setUser] = useState<any>(null)
   const [isNewUser, setIsNewUser] = useState(false)
 
-  // Profile state - use authenticated user data from localStorage
-  const [profile, setProfile] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    profileImage: "",
-    studyLevel: "",
-    department: "",
-    faculty: "",
-    bio: "",
-    skills: [] as string[],
-    is_available: true,
-    links: {
-      github: "",
-      linkedin: "",
-      facebook: "",
-      whatsapp: ""
+  // Profile state - initialize with authUser if available, otherwise empty
+  const [profile, setProfile] = useState(() => {
+    if (authUser) {
+      const userLinks = authUser.links || {}
+      return {
+        first_name: authUser.first_name || '',
+        last_name: authUser.last_name || '',
+        email: authUser.email || "",
+        profileImage: authUser.profile_image || "",
+        studyLevel: authUser.study_level?.toString() || "",
+        department: authUser.department || "",
+        faculty: authUser.faculty || "",
+        bio: authUser.bio || "",
+        skills: Array.isArray(authUser.skills) ? authUser.skills : [],
+        is_available: authUser.is_available ?? true,
+        searching_teams_subjects: Array.isArray(authUser.searching_teams_subjects) ? authUser.searching_teams_subjects : [],
+        links: {
+          github: userLinks.github || "",
+          linkedin: userLinks.linkedin || "",
+          facebook: userLinks.facebook || "",
+          whatsapp: userLinks.whatsapp || ""
+        }
+      }
+    }
+    return {
+      first_name: "",
+      last_name: "",
+      email: "",
+      profileImage: "",
+      studyLevel: "",
+      department: "",
+      faculty: "",
+      bio: "",
+      skills: [] as string[],
+      is_available: true,
+      searching_teams_subjects: [] as string[],
+      links: {
+        github: "",
+        linkedin: "",
+        facebook: "",
+        whatsapp: ""
+      }
     }
   })
 
@@ -314,29 +339,32 @@ export default function SettingsPage() {
     }
   }
 
-  // Sync profile state when auth user is loaded
+  // Sync profile state when auth user is loaded or updated
   useEffect(() => {
     if (authUser) {
       setUser(authUser)
       const userLinks = authUser.links || {}
-      setProfile({
-        first_name: authUser.first_name || '',
-        last_name: authUser.last_name || '',
-        email: authUser.email || "",
-        profileImage: authUser.profile_image || "",
-        studyLevel: authUser.study_level?.toString() || "",
-        department: authUser.department || "",
-        faculty: authUser.faculty || "",
-        bio: authUser.bio || "",
-        skills: Array.isArray(authUser.skills) ? authUser.skills : [],
-        is_available: authUser.is_available ?? true,
+      
+      // Update profile state to ensure it's in sync with authUser
+      setProfile(prev => ({
+        first_name: authUser.first_name || prev.first_name,
+        last_name: authUser.last_name || prev.last_name,
+        email: authUser.email || prev.email,
+        profileImage: authUser.profile_image || prev.profileImage,
+        studyLevel: authUser.study_level?.toString() || prev.studyLevel,
+        department: authUser.department || prev.department,
+        faculty: authUser.faculty || prev.faculty,
+        bio: authUser.bio || prev.bio,
+        skills: Array.isArray(authUser.skills) ? authUser.skills : prev.skills,
+        is_available: authUser.is_available ?? prev.is_available,
+        searching_teams_subjects: Array.isArray(authUser.searching_teams_subjects) ? authUser.searching_teams_subjects : prev.searching_teams_subjects,
         links: {
-          github: userLinks.github || "",
-          linkedin: userLinks.linkedin || "",
-          facebook: userLinks.facebook || "",
-          whatsapp: userLinks.whatsapp || ""
+          github: userLinks.github || prev.links.github,
+          linkedin: userLinks.linkedin || prev.links.linkedin,
+          facebook: userLinks.facebook || prev.links.facebook,
+          whatsapp: userLinks.whatsapp || prev.links.whatsapp
         }
-      })
+      }))
       
       if (authUser.auth_user_id) {
         fetchUserStats(authUser.auth_user_id)
@@ -376,7 +404,7 @@ export default function SettingsPage() {
       "Unlimited projects",
       "Unlimited tasks",
       "Team collaboration",
-      "Task comments & assignments"
+      "Task comments & assignments",
     ],
     starter: [
       "Up to 50 team members",
@@ -441,6 +469,7 @@ export default function SettingsPage() {
         bio: profile.bio,
         skills: profile.skills,
         is_available: profile.is_available,
+        searching_teams_subjects: profile.searching_teams_subjects,
         links: profile.links
       }
 
@@ -480,6 +509,7 @@ export default function SettingsPage() {
           bio: result.data.bio || "",
           skills: Array.isArray(result.data.skills) ? result.data.skills : [],
           is_available: result.data.is_available ?? true,
+          searching_teams_subjects: Array.isArray(result.data.searching_teams_subjects) ? result.data.searching_teams_subjects : [],
           links: {
             github: updatedLinks.github || "",
             linkedin: updatedLinks.linkedin || "",
@@ -517,6 +547,31 @@ export default function SettingsPage() {
     { value: "dark", label: "Dark", icon: <Moon className="size-8" /> },
     { value: "system", label: "System", icon: <Laptop className="size-8" /> }
   ]
+
+  // Get available subjects based on user's faculty and department (from ALL levels)
+  const getAvailableSubjects = (): string[] => {
+    // Only FCDS faculty can edit this field (case-insensitive check)
+    if (!profile.faculty || profile.faculty.toLowerCase() !== FCDS_FACULTY_NAME.toLowerCase()) {
+      return []
+    }
+
+    const dept = profile.department
+    if (!dept) return []
+
+    const allSubjects: string[] = []
+
+    // Add all subjects from user's department across all levels (1-4)
+    for (let level = 1; level <= 4; level++) {
+      if (FCDS_SUBJECTS[level]?.[dept]) {
+        allSubjects.push(...FCDS_SUBJECTS[level][dept])
+      }
+    }
+
+    // Remove duplicates and return
+    return [...new Set(allSubjects)]
+  }
+
+  const canEditSearchingSubjects = profile.faculty && profile.faculty.toLowerCase() === FCDS_FACULTY_NAME.toLowerCase() && profile.department
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -671,7 +726,7 @@ export default function SettingsPage() {
                       <div className="space-y-2">
                         <Label htmlFor="department">Department</Label>
                         <Select 
-                          value={profile.department} 
+                          value={profile.department || undefined} 
                           onValueChange={(value) => setProfile({ ...profile, department: value })}
                           disabled
                         >
@@ -679,7 +734,6 @@ export default function SettingsPage() {
                             <SelectValue placeholder="Select dept" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="General">General</SelectItem>
                             {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
                               <SelectItem key={code} value={code}>{name}</SelectItem>
                             ))}
@@ -913,6 +967,88 @@ export default function SettingsPage() {
                         <p className="text-xs text-muted-foreground">Include country code (e.g., +20 for Egypt)</p>
                       </div>
                     </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  {/* Searching for Teams Subjects */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-1">Team Subject Preferences</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {canEditSearchingSubjects 
+                          ? "Select subjects you're looking to join teams for. This helps team owners find you."
+                          : "Only available for Faculty of Computer and Data Science students"}
+                      </p>
+                    </div>
+                    
+                    {canEditSearchingSubjects ? (
+                      <div className="space-y-3">
+                        {/* Selected Subjects Display */}
+                        <div className="flex flex-wrap gap-2 mb-3 min-h-[40px] p-2 border rounded-md bg-muted/20">
+                          {profile.searching_teams_subjects.length === 0 ? (
+                            <span className="text-sm text-muted-foreground italic px-2">No subjects selected...</span>
+                          ) : (
+                            profile.searching_teams_subjects.map((subject, index) => (
+                              <Badge key={index} variant="default" className="flex items-center gap-1 py-1 px-2">
+                                {subject}
+                                <button 
+                                  onClick={() => setProfile({ 
+                                    ...profile, 
+                                    searching_teams_subjects: profile.searching_teams_subjects.filter((_, i) => i !== index) 
+                                  })}
+                                  className="ml-1 hover:text-destructive transition-colors"
+                                >
+                                  &times;
+                                </button>
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                        
+                        {/* Subject Selector Dropdown */}
+                        <div className="space-y-2">
+                          <Label>Available Subjects for Your Level & Department</Label>
+                          <Select 
+                            value=""
+                            onValueChange={(value) => {
+                              if (value && !profile.searching_teams_subjects.includes(value)) {
+                                setProfile({ 
+                                  ...profile, 
+                                  searching_teams_subjects: [...profile.searching_teams_subjects, value] 
+                                })
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a subject to add" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getAvailableSubjects().filter(s => !profile.searching_teams_subjects.includes(s)).map((subject) => (
+                                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                              ))}
+                              {getAvailableSubjects().filter(s => !profile.searching_teams_subjects.includes(s)).length === 0 && (
+                                <div className="p-2 text-sm text-muted-foreground text-center">
+                                  All subjects selected
+                                </div>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground italic">
+                            Subjects from all levels in your department ({DEPARTMENT_NAMES[profile.department] || profile.department})
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
+                        <p className="text-sm text-muted-foreground text-center">
+                          This feature is only available for students from the Faculty of Computer and Data Science.
+                          {profile.faculty && profile.faculty.toLowerCase() !== FCDS_FACULTY_NAME.toLowerCase() && (
+                            <span className="block mt-1">Your current faculty: {profile.faculty}</span>
+                          )}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex justify-end pt-4">

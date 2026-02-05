@@ -9,7 +9,67 @@ import {
 // Common Faculty-level subjects for all programs (Level 1 - Semester 1 & 2)
 export const FCDS_SUBJECTS: Record<number, Record<string, string[]>> = {
   1: {
-    "General": [
+    "DS": [
+      "Linear Alg.",
+      "Calculus",
+      "Introduction to CS",
+      "Introduction to DS",
+      "Programming I",
+      "Probability I",
+      "Discrete Structures",
+      "Data Structures",
+      "Introduction to AI",
+      "Programming II"
+    ],
+    "BA": [
+      "Linear Alg.",
+      "Calculus",
+      "Introduction to CS",
+      "Introduction to DS",
+      "Programming I",
+      "Probability I",
+      "Discrete Structures",
+      "Data Structures",
+      "Introduction to AI",
+      "Programming II"
+    ],
+    "IS": [
+      "Linear Alg.",
+      "Calculus",
+      "Introduction to CS",
+      "Introduction to DS",
+      "Programming I",
+      "Probability I",
+      "Discrete Structures",
+      "Data Structures",
+      "Introduction to AI",
+      "Programming II"
+    ],
+    "HI": [
+      "Linear Alg.",
+      "Calculus",
+      "Introduction to CS",
+      "Introduction to DS",
+      "Programming I",
+      "Probability I",
+      "Discrete Structures",
+      "Data Structures",
+      "Introduction to AI",
+      "Programming II"
+    ],
+    "CS": [
+      "Linear Alg.",
+      "Calculus",
+      "Introduction to CS",
+      "Introduction to DS",
+      "Programming I",
+      "Probability I",
+      "Discrete Structures",
+      "Data Structures",
+      "Introduction to AI",
+      "Programming II"
+    ],
+    "MA": [
       "Linear Alg.",
       "Calculus",
       "Introduction to CS",

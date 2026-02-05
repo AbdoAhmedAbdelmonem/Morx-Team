@@ -47,11 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           bio: userData.bio,
           skills: userData.skills,
           is_available: userData.is_available,
+          searching_teams_subjects: userData.searching_teams_subjects,
+          links: userData.links,
         }
-        console.log('[AuthContext] Extracted user from cookie:', normalizedUser.email, 'ID:', normalizedUser.auth_user_id);
+        // // console.log('[AuthContext] Extracted user from cookie:', normalizedUser.email, 'ID:', normalizedUser.auth_user_id);
         return normalizedUser
       } catch (error) {
-        console.error('Error parsing cookie session:', error)
+        // // console.error('Error parsing cookie session:', error)
       }
     }
 
@@ -63,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // SELF-HEALING: If cookie is missing but localStorage exists, re-hydrate the cookie
         if (!getCookie('morx_session') && userData.auth_user_id) {
-          console.log('[AuthContext] Re-hydrating morx_session cookie from localStorage');
+          // // console.log('[AuthContext] Re-hydrating morx_session cookie from localStorage');
           const cookieData = encodeURIComponent(JSON.stringify(userData));
           // Set cookie for 7 days
           document.cookie = `morx_session=${cookieData}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
@@ -82,10 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           bio: userData.bio,
           skills: userData.skills,
           is_available: userData.is_available,
+          searching_teams_subjects: userData.searching_teams_subjects,
+          links: userData.links,
         }
         return normalizedUser
       } catch (error) {
-        console.error('Error parsing session:', error)
+        // // console.error('Error parsing session:', error)
       }
     }
 
@@ -139,6 +143,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         bio: resolvedNewVal.bio ?? prev.bio,
         skills: resolvedNewVal.skills ?? prev.skills,
         is_available: resolvedNewVal.is_available ?? prev.is_available,
+        searching_teams_subjects: resolvedNewVal.searching_teams_subjects ?? prev.searching_teams_subjects,
+        links: resolvedNewVal.links ?? prev.links,
       };
 
       syncToStorage(merged);
@@ -175,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (e) {
-      console.error('[AuthContext] Profile image sync error:', e)
+      // // console.error('[AuthContext] Profile image sync error:', e)
     }
   };
 
@@ -191,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('[AuthContext] Failed to fetch latest profile:', error)
+      // // console.error('[AuthContext] Failed to fetch latest profile:', error)
     }
   };
 

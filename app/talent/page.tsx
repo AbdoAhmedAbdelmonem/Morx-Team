@@ -57,6 +57,7 @@ export default function TalentMarketplace() {
   const [searchQuery, setSearchQuery] = useState("")
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [skillFilter, setSkillFilter] = useState("")
+  const [subjectFilter, setSubjectFilter] = useState("")
 
   // Invitation state
   const [selectedUser, setSelectedUser] = useState<any>(null)
@@ -65,11 +66,21 @@ export default function TalentMarketplace() {
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [sendingInvite, setSendingInvite] = useState(false)
 
+  // Member details dialog state
+  const [selectedMemberDetails, setSelectedMemberDetails] = useState<any>(null)
+  const [isMemberDetailsOpen, setIsMemberDetailsOpen] = useState(false)
+
   // AI Match state
   const [aiMatchActive, setAiMatchActive] = useState(false)
   const [aiMatchLoading, setAiMatchLoading] = useState(false)
   const [aiMatchedIds, setAiMatchedIds] = useState<string[]>([])
   const [aiMatchReason, setAiMatchReason] = useState<string>("")
+
+  // AI Team Suggestion state (for current user)
+  const [suggestedTeamsDialogOpen, setSuggestedTeamsDialogOpen] = useState(false)
+  const [suggestedTeams, setSuggestedTeams] = useState<any[]>([])
+  const [suggestedTeamsLoading, setSuggestedTeamsLoading] = useState(false)
+  const [suggestedTeamsReason, setSuggestedTeamsReason] = useState<string>("")
 
   useEffect(() => {
     const storedSession = localStorage.getItem('student_session')
@@ -123,7 +134,7 @@ export default function TalentMarketplace() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          team_id: parseInt(selectedTeam),
+          team_id: selectedTeam,
           target_auth_user_id: selectedUser.auth_user_id,
           inviter_id: user.auth_user_id,
           message: inviteMessage
@@ -163,47 +174,59 @@ export default function TalentMarketplace() {
         purpose: team.purpose || '',
         subject: team.subject || '',
         tags: team.tags || []
-      })).filter(t => t.required_skills.length > 0 || t.purpose || t.subject)
+      }))
 
-      if (teamRequirements.length === 0) {
-        toast.error("Your teams don't have any requirements set. Add required skills in team settings first.")
+      // Get available candidates (exclude current user)
+      const availableCandidates = talent.filter(t => t.auth_user_id !== user?.auth_user_id)
+
+      if (availableCandidates.length === 0) {
+        toast.error("No candidates available in the talent pool")
         setAiMatchLoading(false)
         return
       }
 
       // Build prompt for AI
-      const prompt = `You are a talent matching AI. Based on the following team requirements, analyze and rank candidates.
+      const prompt = `You are a talent matching AI. Analyze and rank candidates based on team requirements and candidate profiles.
 
 TEAM REQUIREMENTS:
 ${teamRequirements.map(t => `
 Team: ${t.name}
-- Required Skills: ${t.required_skills.join(', ') || 'None specified'}
-- Purpose: ${t.purpose || 'Not specified'}
-- Subject/Field: ${t.subject || 'Not specified'}
+- Required Skills: ${t.required_skills.join(', ') || 'Any skills welcome'}
+- Purpose: ${t.purpose || 'General collaboration'}
+- Subject/Field: ${t.subject || 'Any field'}
 - Tags: ${t.tags.join(', ') || 'None'}
 `).join('\n')}
 
-AVAILABLE CANDIDATES:
-${talent.filter(t => t.auth_user_id !== user?.auth_user_id).map(t => `
+AVAILABLE CANDIDATES (${availableCandidates.length} total):
+${availableCandidates.map(t => `
 ID: ${t.auth_user_id}
 Name: ${t.first_name} ${t.last_name}
 Department: ${t.department || 'General'}
 Level: ${t.study_level || 'Unknown'}
-Skills: ${t.skills?.join(', ') || 'None listed'}
-Bio: ${t.bio || 'No bio'}
+Skills: ${Array.isArray(t.skills) && t.skills.length > 0 ? t.skills.join(', ') : 'No skills listed'}
+Looking for teams in: ${Array.isArray(t.searching_teams_subjects) && t.searching_teams_subjects.length > 0 ? t.searching_teams_subjects.join(', ') : 'Open to any subject'}
+Bio: ${t.bio || 'No bio provided'}
 `).join('\n')}
 
-Respond with ONLY a JSON object in this exact format (no markdown, no explanation):
-{"matched_ids": ["id1", "id2", ...], "reason": "Brief explanation of why these candidates match"}
+MATCHING RULES:
+1. PRIORITIZE candidates with listed skills that match team requirements
+2. Give HIGHEST priority to candidates whose "Looking for teams in" subjects align with team requirements
+3. ONLY include candidates without skills if they have relevant subjects OR if fewer than 3 qualified candidates found
+4. Consider department relevance and study level
+5. Exclude candidates with no skills AND no subjects listed
+6. Select 3-10 candidates based on quality of matches (prefer fewer high-quality matches over many weak matches)
 
-Select the TOP candidates (up to 10) who best match the team requirements. Consider skill overlap, relevant experience, and field alignment.`
+Respond with ONLY a JSON object in this exact format (no markdown, no explanation):
+{"matched_ids": ["id1", "id2", ...], "reason": "Brief explanation"}
+
+Select the BEST candidates (3-10) who have the strongest match. Quality over quantity - only include candidates who genuinely fit.`
 
       const response = await fetch('/api/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
-          max_tokens: 500,
+          max_tokens: 800,
           userId: user?.auth_user_id
         })
       })
@@ -222,17 +245,26 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
           const cleanedResponse = result.data.replace(/```json\n?|\n?```/g, '').trim()
           const parsed = JSON.parse(cleanedResponse)
           
-          if (parsed.matched_ids && Array.isArray(parsed.matched_ids)) {
-            setAiMatchedIds(parsed.matched_ids)
-            setAiMatchReason(parsed.reason || "Matched based on team requirements")
-            setAiMatchActive(true)
-            toast.success(`Found ${parsed.matched_ids.length} matching candidates!`)
+          if (parsed.matched_ids && Array.isArray(parsed.matched_ids) && parsed.matched_ids.length > 0) {
+            // Validate that matched IDs exist in talent pool
+            const validIds = parsed.matched_ids.filter((id: string) => 
+              talent.some(t => t.auth_user_id === id)
+            )
+            
+            if (validIds.length > 0) {
+              setAiMatchedIds(validIds)
+              setAiMatchReason(parsed.reason || "Matched based on team requirements and candidate profiles")
+              setAiMatchActive(true)
+              toast.success(`🎯 Found ${validIds.length} matching candidates!`)
+            } else {
+              toast.error("No valid matches found in the current talent pool")
+            }
           } else {
-            toast.error("AI returned unexpected format")
+            toast.error("AI couldn't find matching candidates. Try adjusting your team settings.")
           }
         } catch (parseError) {
           console.error('Parse error:', parseError, result.data)
-          toast.error("Failed to parse AI response")
+          toast.error("Failed to parse AI response. Please try again.")
         }
       } else {
         toast.error(result.error || "AI matching failed")
@@ -251,6 +283,113 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
     setAiMatchReason("")
   }
 
+  const handleSuggestTeamsForMe = async () => {
+    if (!user) {
+      toast.error("Please log in to get team suggestions")
+      return
+    }
+
+    try {
+      setSuggestedTeamsLoading(true)
+      setSuggestedTeamsDialogOpen(true)
+
+      // Fetch all available teams
+      const teamsRes = await fetch('/api/teams/browse')
+      const teamsResult = await teamsRes.json()
+      
+      if (!teamsResult.success || !teamsResult.data || teamsResult.data.length === 0) {
+        toast.error("No teams available to suggest")
+        setSuggestedTeamsLoading(false)
+        return
+      }
+
+      const availableTeams = teamsResult.data
+
+      // Build prompt for AI
+      const prompt = `You are a team matching AI. Analyze the candidate's profile and suggest the BEST matching teams.
+
+CANDIDATE PROFILE:
+Name: ${user.first_name} ${user.last_name}
+Department: ${user.department || 'General'}
+Study Level: ${user.study_level || 'Unknown'}
+Skills: ${Array.isArray(user.skills) && user.skills.length > 0 ? user.skills.join(', ') : 'No skills listed'}
+Looking for teams in subjects: ${Array.isArray(user.searching_teams_subjects) && user.searching_teams_subjects.length > 0 ? user.searching_teams_subjects.join(', ') : 'Open to any subject'}
+Bio: ${user.bio || 'No bio provided'}
+
+AVAILABLE TEAMS (${availableTeams.length} total):
+${availableTeams.map((t: any) => `
+Team ID: ${t.team_id}
+Team Name: ${t.team_name}
+Purpose: ${t.purpose || 'General collaboration'}
+Subject: ${t.subject || 'Any field'}
+Required Skills: ${Array.isArray(t.required_skills) && t.required_skills.length > 0 ? t.required_skills.join(', ') : 'No specific requirements'}
+Tags: ${Array.isArray(t.tags) && t.tags.length > 0 ? t.tags.join(', ') : 'None'}
+Member Count: ${t.member_count || 0}`).join('\n')}
+
+MATCHING RULES:
+1. PRIORITIZE teams whose subject matches candidate's "Looking for teams in" subjects
+2. Match required skills with candidate's skills
+3. Consider team purpose alignment with candidate's profile
+4. Exclude teams where candidate is already a member
+5. Select 3-8 teams with the BEST fit (quality over quantity)
+
+Respond with ONLY a JSON object in this exact format (no markdown, no explanation):
+{"team_ids": ["id1", "id2", ...], "reason": "Brief explanation of why these teams match"}
+
+Select the BEST teams (3-8) that would be ideal for this candidate.`
+
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          max_tokens: 800,
+          userId: user.auth_user_id
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.limitReached) {
+        toast.error(result.error || "Daily AI limit reached. Try again tomorrow!")
+        setSuggestedTeamsLoading(false)
+        return
+      }
+      
+      if (result.success && result.data) {
+        try {
+          const cleanedResponse = result.data.replace(/```json\n?|\n?```/g, '').trim()
+          const parsed = JSON.parse(cleanedResponse)
+          
+          if (parsed.team_ids && Array.isArray(parsed.team_ids) && parsed.team_ids.length > 0) {
+            // Get full team details
+            const matchedTeams = availableTeams.filter((t: any) => parsed.team_ids.includes(t.team_id))
+            
+            if (matchedTeams.length > 0) {
+              setSuggestedTeams(matchedTeams)
+              setSuggestedTeamsReason(parsed.reason || "Matched based on your skills and interests")
+              toast.success(`🎯 Found ${matchedTeams.length} teams that match your profile!`)
+            } else {
+              toast.error("No matching teams found")
+            }
+          } else {
+            toast.error("AI couldn't find suitable teams. Try updating your profile with more skills or subjects.")
+          }
+        } catch (parseError) {
+          console.error('Parse error:', parseError, result.data)
+          toast.error("Failed to parse AI response. Please try again.")
+        }
+      } else {
+        toast.error(result.error || "AI team suggestion failed")
+      }
+    } catch (error) {
+      console.error('AI Team Suggestion error:', error)
+      toast.error("An error occurred during team suggestion")
+    } finally {
+      setSuggestedTeamsLoading(false)
+    }
+  }
+
   const filteredTalent = talent.filter(item => {
     // If AI match is active, only show matched candidates
     if (aiMatchActive) {
@@ -265,8 +404,11 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
     
     const matchesSkill = skillFilter === "" || 
       (item.skills && item.skills.some((s: string) => s.toLowerCase().includes(skillFilter.toLowerCase())))
+    
+    const matchesSubject = subjectFilter === "" || 
+      (item.searching_teams_subjects && item.searching_teams_subjects.some((s: string) => s.toLowerCase().includes(subjectFilter.toLowerCase())))
 
-    return matchesSearch && matchesDepartment && matchesSkill && item.auth_user_id !== user?.auth_user_id
+    return matchesSearch && matchesDepartment && matchesSkill && matchesSubject && item.auth_user_id !== user?.auth_user_id
   }).sort((a, b) => {
     // If AI match is active, sort by the order returned by AI
     if (aiMatchActive) {
@@ -295,7 +437,7 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
           {/* Filters Bar */}
           <Card className="mb-8 border-primary/10 shadow-sm bg-background">
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
                   <Input 
@@ -323,10 +465,19 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-3 size-4 text-muted-foreground" />
                   <Input 
-                    placeholder="Filter by skill (e.g. React)..." 
+                    placeholder="Filter by skill..." 
                     className="pl-9"
                     value={skillFilter}
                     onChange={(e) => setSkillFilter(e.target.value)}
+                  />
+                </div>
+                <div className="relative">
+                  <Star className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Filter by subject..." 
+                    className="pl-9"
+                    value={subjectFilter}
+                    onChange={(e) => setSubjectFilter(e.target.value)}
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -356,11 +507,12 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
                       <X className="mr-2 size-4" /> Clear AI Match
                     </Button>
                   )}
-                  {(searchQuery || departmentFilter !== "all" || skillFilter) && !aiMatchActive && (
+                  {(searchQuery || departmentFilter !== "all" || skillFilter || subjectFilter) && !aiMatchActive && (
                     <Button variant="ghost" className="h-10 text-muted-foreground" onClick={() => {
                         setSearchQuery("");
                         setDepartmentFilter("all");
                         setSkillFilter("");
+                        setSubjectFilter("");
                     }}>
                       <X className="mr-2 size-4" /> Reset
                     </Button>
@@ -401,10 +553,17 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
           ) : (
             <div data-tutorial="talent-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTalent.map((member) => (
-                <Card key={member.auth_user_id} className="group hover:shadow-xl transition-all duration-300 border-primary/5 hover:border-primary/20 overflow-hidden flex flex-col ">
-                  <div className="h-2 bg-gradient-to-r from-primary/40 to-primary/10" />
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start gap-4">
+                <Card 
+                  key={member.auth_user_id} 
+                  className="group hover:shadow-xl transition-all duration-300 border-primary/5 hover:border-primary/20 overflow-hidden flex flex-col cursor-pointer"
+                  onClick={() => {
+                    setSelectedMemberDetails(member)
+                    setIsMemberDetailsOpen(true)
+                  }}
+                >
+                  <div className="h-1.5 bg-gradient-to-r from-primary/40 to-primary/10" />
+                  <CardHeader className="pb-2 pt-3">
+                    <div className="flex items-center gap-3">
                       <PlanAvatar
                         src={member.profile_image}
                         alt={member.first_name || ''}
@@ -414,176 +573,130 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
                             {member.first_name?.[0]}{member.last_name?.[0]}
                           </div>
                         }
-                        size="xl"
+                        size="md"
                       />
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors inline-flex items-center gap-1.5">
-                          {member.first_name} {member.last_name}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <CardTitle className="text-base font-bold group-hover:text-primary transition-colors">
+                            {member.first_name} {member.last_name}
+                          </CardTitle>
                           <Badge 
                             variant="outline" 
-                            className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0 ${
+                            className={`text-[10px] font-bold uppercase px-1.5 py-0 ${
                               member.plan === 'enterprise' ? 'bg-red-500/10 text-red-500 border-red-500/30' :
                               member.plan === 'professional' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' :
                               member.plan === 'starter' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' :
                               'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
                             }`}
                           >
-                            {member.plan === 'enterprise' ? 'Enterprise' : 
-                             member.plan === 'professional' ? 'Pro' : 
-                             member.plan === 'starter' ? 'Starter' : 'Free'}
+                            {member.plan === 'enterprise' ? 'ENT' : 
+                             member.plan === 'professional' ? 'PRO' : 
+                             member.plan === 'starter' ? 'STR' : 'FREE'}
                           </Badge>
-                        </CardTitle>
-                        <CardDescription className="flex items-center gap-1 mt-1 text-sm font-medium text-primary/80">
-                          <Star className="size-3 fill-primary/20" /> 
-                          {(member.department && DEPARTMENT_NAMES[member.department]) || member.department || "General"} • Level {member.study_level || "?"}
+                        </div>
+                        <CardDescription className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
+                          <Star className="size-2.5 fill-primary/20" /> 
+                          {(member.department && DEPARTMENT_NAMES[member.department]) || member.department || "General"}
                         </CardDescription>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex-1 space-y-5">
-                    <div className="relative">
-                      <p className="text-sm text-muted-foreground line-clamp-3 italic min-h-[60px] leading-relaxed">
-                        "{member.bio || "No bio provided. This member is ready for new challenges!"}"
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-1">Top Skills</p>
-                        <div className="flex flex-wrap gap-1.5">
-                        {member.skills && Array.isArray(member.skills) && member.skills.length > 0 ? (
-                            member.skills.slice(0, 5).map((skill: string, idx: number) => (
-                            <Badge key={idx} variant="outline" className="text-[10px] uppercase font-bold tracking-wider py-0.5 px-2 bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
-                                {skill}
+                  <CardContent className="flex-1 py-2">
+                    {/* Searching for Teams Subjects */}
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50">Looking for Teams In</p>
+                      {member.searching_teams_subjects && Array.isArray(member.searching_teams_subjects) && member.searching_teams_subjects.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {member.searching_teams_subjects.slice(0, 3).map((subject: string, idx: number) => (
+                            <Badge key={idx} variant="default" className="text-[10px] py-0 px-1.5 bg-primary/15 text-primary hover:bg-primary/25">
+                              {subject}
                             </Badge>
-                            ))
-                        ) : (
-                            <span className="text-xs text-muted-foreground/60 italic px-1">No specific skills listed</span>
-                        )}
-                        {member.skills?.length > 5 && (
-                            <Badge variant="outline" className="text-[10px] text-primary font-bold border-none">
-                            +{member.skills.length - 5} MORE
+                          ))}
+                          {member.searching_teams_subjects.length > 3 && (
+                            <Badge variant="outline" className="text-[10px] text-primary font-bold py-0 px-1.5">
+                              +{member.searching_teams_subjects.length - 3}
                             </Badge>
-                        )}
-                        </div>
-                    </div>
-                    
-                    {/* Social Links */}
-                    {member.links && (member.links.github || member.links.linkedin || member.links.facebook || member.links.whatsapp) && (
-                      <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-1">Connect</p>
-                        <div className="flex items-center gap-2">
-                          {member.links.github && (
-                            <a
-                              href={member.links.github}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-all"
-                              title="GitHub"
-                            >
-                              <GithubIcon />
-                            </a>
-                          )}
-                          {member.links.linkedin && (
-                            <a
-                              href={member.links.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-full bg-muted hover:bg-[#0077B5]/10 hover:text-[#0077B5] transition-all"
-                              title="LinkedIn"
-                            >
-                              <LinkedInIcon />
-                            </a>
-                          )}
-                          {member.links.facebook && (
-                            <a
-                              href={member.links.facebook}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-full bg-muted hover:bg-[#1877F2]/10 hover:text-[#1877F2] transition-all"
-                              title="Facebook"
-                            >
-                              <FacebookIcon />
-                            </a>
-                          )}
-                          {member.links.whatsapp && (
-                            <button
-                              onClick={() => {
-                                setSelectedMemberForWhatsapp(member)
-                                setWhatsappMessage(`Hi ${member.first_name}! I found your profile on Morx and would like to connect with you.`)
-                                setWhatsappDialogOpen(true)
-                              }}
-                              className="p-2 rounded-full bg-muted hover:bg-[#25D366]/10 hover:text-[#25D366] transition-all"
-                              title="WhatsApp"
-                            >
-                              <WhatsAppIcon />
-                            </button>
                           )}
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          {[
+                            "Too cool for subjects apparently 😎",
+                            "Searching for... nothing? Interesting strategy 🤔",
+                            "The mysterious type - no preferences listed 🕵️",
+                            "Keeping it open-ended... or just lazy? 🤷",
+                            "Probably waiting for subjects to find them 🎯",
+                            "Team-less wanderer with no destination 🗺️",
+                            "Not picky... or just hasn't decided yet? 🎲"
+                          ][Math.floor(Math.random() * 7)]}
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
-                  <CardFooter className="pt-0 pb-6 pr-6">
-                    <div className="flex w-full items-center justify-end gap-3">
-                       
-                       {myTeams.length > 0 && (
-                         <Dialog open={isInviteOpen && selectedUser?.auth_user_id === member.auth_user_id} onOpenChange={(open) => {
-                           setIsInviteOpen(open);
-                           if (open) setSelectedUser(member);
-                           else setSelectedUser(null);
-                         }}>
-                           <DialogTrigger asChild>
-                             <Button size="sm" className="bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white shadow-[0_4px_14px_0_rgba(0,186,124,0.39)] transition-all duration-300 font-bold px-6">
-                               Invite to Team
-                             </Button>
-                           </DialogTrigger>
-                           <DialogContent>
-                             <DialogHeader>
-                               <DialogTitle>Invite {member.first_name} to your Team</DialogTitle>
-                               <DialogDescription>
-                                 Choose one of your teams to send an invitation to this user.
-                               </DialogDescription>
-                             </DialogHeader>
-                             <div className="space-y-4 py-4">
-                               <div className="space-y-2">
-                                 <Label>Select Team</Label>
-                                 <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                                   <SelectTrigger>
-                                     <SelectValue placeholder="Choose a team..." />
-                                   </SelectTrigger>
-                                   <SelectContent>
-                                     {myTeams.map((team) => (
-                                       <SelectItem key={team.team_id} value={team.team_id.toString()}>
-                                         {team.team_name} ({team.role})
-                                       </SelectItem>
-                                     ))}
-                                   </SelectContent>
-                                 </Select>
-                               </div>
-                               <div className="space-y-2">
-                                 <Label>Invitation Message (Optional)</Label>
-                                 <Textarea 
-                                   placeholder="Hi! We saw your profile and we'd love to have you on our team..."
-                                   value={inviteMessage}
-                                   onChange={(e) => setInviteMessage(e.target.value)}
-                                   className="min-h-[100px]"
-                                 />
-                               </div>
-                             </div>
-                             <DialogFooter>
-                               <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Cancel</Button>
-                               <Button onClick={handleSendInvite} disabled={!selectedTeam || sendingInvite}>
-                                 {sendingInvite ? "Sending..." : "Send Invitation"}
-                               </Button>
-                             </DialogFooter>
-                           </DialogContent>
-                         </Dialog>
-                       )}
-                    </div>
+                  <CardFooter className="pt-0 pb-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="w-full h-7 text-xs text-primary hover:text-primary hover:bg-primary/10"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedMemberDetails(member)
+                        setIsMemberDetailsOpen(true)
+                      }}
+                    >
+                      View Details
+                      <ExternalLink className="ml-1.5 size-3" />
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
             </div>
           )}
         </div>
+        
+        {/* Invitation Dialog */}
+        <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Invite {selectedUser?.first_name} to your Team</DialogTitle>
+              <DialogDescription>
+                Choose one of your teams to send an invitation to this user.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Select Team</Label>
+                <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a team..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {myTeams.map((team) => (
+                      <SelectItem key={team.team_id} value={team.team_id.toString()}>
+                        {team.team_name} ({team.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Invitation Message (Optional)</Label>
+                <Textarea 
+                  placeholder="Hi! We saw your profile and we'd love to have you on our team..."
+                  value={inviteMessage}
+                  onChange={(e) => setInviteMessage(e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Cancel</Button>
+              <Button onClick={handleSendInvite} disabled={!selectedTeam || sendingInvite}>
+                {sendingInvite ? "Sending..." : "Send Invitation"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         
         {/* WhatsApp Message Dialog */}
         <Dialog open={whatsappDialogOpen} onOpenChange={setWhatsappDialogOpen}>
@@ -629,6 +742,260 @@ Select the TOP candidates (up to 10) who best match the team requirements. Consi
               >
                 <WhatsAppIcon />
                 <span className="ml-2">Open WhatsApp</span>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Member Details Dialog */}
+        <Dialog open={isMemberDetailsOpen} onOpenChange={setIsMemberDetailsOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <PlanAvatar
+                  src={selectedMemberDetails?.profile_image}
+                  alt={selectedMemberDetails?.first_name || ''}
+                  plan={selectedMemberDetails?.plan}
+                  fallback={
+                    <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold">
+                      {selectedMemberDetails?.first_name?.[0]}{selectedMemberDetails?.last_name?.[0]}
+                    </div>
+                  }
+                  size="lg"
+                />
+                <div>
+                  <div className="text-xl font-bold">{selectedMemberDetails?.first_name} {selectedMemberDetails?.last_name}</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    {(selectedMemberDetails?.department && DEPARTMENT_NAMES[selectedMemberDetails?.department]) || selectedMemberDetails?.department || "General"} • Level {selectedMemberDetails?.study_level || "?"}
+                  </div>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              {/* Plan */}
+              <div>
+                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Plan</h3>
+                <Badge 
+                  variant="outline" 
+                  className={`text-sm font-bold uppercase tracking-wider px-3 py-1 ${
+                    selectedMemberDetails?.plan === 'enterprise' ? 'bg-red-500/10 text-red-500 border-red-500/30' :
+                    selectedMemberDetails?.plan === 'professional' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' :
+                    selectedMemberDetails?.plan === 'starter' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' :
+                    'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                  }`}
+                >
+                  {selectedMemberDetails?.plan === 'enterprise' ? 'Enterprise' : 
+                   selectedMemberDetails?.plan === 'professional' ? 'Professional' : 
+                   selectedMemberDetails?.plan === 'starter' ? 'Starter' : 'Free'}
+                </Badge>
+              </div>
+
+              {/* Bio */}
+              {selectedMemberDetails?.bio && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">About</h3>
+                  <p className="text-sm text-foreground leading-relaxed italic">"{selectedMemberDetails.bio}"</p>
+                </div>
+              )}
+
+              {/* Skills */}
+              {selectedMemberDetails?.skills && selectedMemberDetails.skills.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedMemberDetails.skills.map((skill: string, idx: number) => (
+                      <Badge key={idx} variant="secondary" className="text-sm">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Searching Teams Subjects */}
+              {selectedMemberDetails?.searching_teams_subjects && selectedMemberDetails.searching_teams_subjects.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">Looking to Join Teams For</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedMemberDetails.searching_teams_subjects.map((subject: string, idx: number) => (
+                      <Badge key={idx} variant="outline" className="text-sm bg-primary/5 border-primary/30">
+                        {subject}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Social Links */}
+              {selectedMemberDetails?.links && (selectedMemberDetails.links.github || selectedMemberDetails.links.linkedin || selectedMemberDetails.links.facebook || selectedMemberDetails.links.whatsapp) && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">Connect</h3>
+                  <div className="flex items-center gap-3">
+                    {selectedMemberDetails.links.github && (
+                      <a
+                        href={selectedMemberDetails.links.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-primary/10 hover:text-primary transition-all"
+                      >
+                        <GithubIcon />
+                        <span className="text-sm font-medium">GitHub</span>
+                      </a>
+                    )}
+                    {selectedMemberDetails.links.linkedin && (
+                      <a
+                        href={selectedMemberDetails.links.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-[#0077B5]/10 hover:text-[#0077B5] transition-all"
+                      >
+                        <LinkedInIcon />
+                        <span className="text-sm font-medium">LinkedIn</span>
+                      </a>
+                    )}
+                    {selectedMemberDetails.links.facebook && (
+                      <a
+                        href={selectedMemberDetails.links.facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-[#1877F2]/10 hover:text-[#1877F2] transition-all"
+                      >
+                        <FacebookIcon />
+                        <span className="text-sm font-medium">Facebook</span>
+                      </a>
+                    )}
+                    {selectedMemberDetails.links.whatsapp && (
+                      <button
+                        onClick={() => {
+                          setSelectedMemberForWhatsapp(selectedMemberDetails)
+                          setWhatsappMessage(`Hi ${selectedMemberDetails.first_name}! I found your profile on Morx and would like to connect with you.`)
+                          setWhatsappDialogOpen(true)
+                          setIsMemberDetailsOpen(false)
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-[#25D366]/10 hover:text-[#25D366] transition-all"
+                      >
+                        <WhatsAppIcon />
+                        <span className="text-sm font-medium">WhatsApp</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsMemberDetailsOpen(false)}>Close</Button>
+              {myTeams.length > 0 && (
+                <Button 
+                  onClick={() => {
+                    setSelectedUser(selectedMemberDetails)
+                    setIsMemberDetailsOpen(false)
+                    setIsInviteOpen(true)
+                  }}
+                  className="bg-gradient-to-br from-primary to-primary/80"
+                >
+                  Invite to Team
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Suggested Teams Dialog */}
+        <Dialog open={suggestedTeamsDialogOpen} onOpenChange={setSuggestedTeamsDialogOpen}>
+          <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="size-5 text-emerald-500" />
+                AI Team Suggestions for You
+              </DialogTitle>
+              <DialogDescription>
+                Based on your skills and interests, here are teams that might be perfect for you
+              </DialogDescription>
+            </DialogHeader>
+
+            {suggestedTeamsLoading ? (
+              <div className="py-12 text-center">
+                <Loader2 className="size-12 animate-spin text-emerald-500 mx-auto mb-4" />
+                <p className="text-sm text-muted-foreground">AI is analyzing teams for you...</p>
+              </div>
+            ) : suggestedTeams.length > 0 ? (
+              <div className="space-y-4">
+                {/* AI Reason Banner */}
+                <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
+                  <CardContent className="py-3">
+                    <p className="text-sm text-muted-foreground">{suggestedTeamsReason}</p>
+                  </CardContent>
+                </Card>
+
+                {/* Teams List */}
+                <div className="space-y-3">
+                  {suggestedTeams.map((team: any) => (
+                    <Card key={team.team_id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-2">
+                            <div>
+                              <h3 className="font-semibold text-lg">{team.team_name}</h3>
+                              {team.subject && (
+                                <Badge variant="secondary" className="text-xs mt-1">
+                                  {team.subject}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {team.purpose && (
+                              <p className="text-sm text-muted-foreground">{team.purpose}</p>
+                            )}
+                            
+                            {team.required_skills && Array.isArray(team.required_skills) && team.required_skills.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                <span className="text-xs text-muted-foreground">Required:</span>
+                                {team.required_skills.map((skill: string, idx: number) => (
+                                  <Badge key={idx} variant="outline" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Users className="size-3" />
+                                {team.member_count || 0} members
+                              </span>
+                            </div>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              window.location.href = `/teams/${team.team_url}`
+                            }}
+                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                          >
+                            View Team
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center">
+                <Users className="size-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Teams Found</h3>
+                <p className="text-sm text-muted-foreground">
+                  Try adding more skills or subjects to your profile to get better suggestions.
+                </p>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSuggestedTeamsDialogOpen(false)}>
+                Close
               </Button>
             </DialogFooter>
           </DialogContent>
