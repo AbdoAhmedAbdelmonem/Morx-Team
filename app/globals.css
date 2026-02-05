@@ -4,10 +4,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Rock+Salt&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100..900&display=swap');
 
 @layer utilities {
     .font-rubik {
         font-family: var(--font-rubik), sans-serif;
+    }
+    .font-cairo {
+        font-family: var(--font-cairo), sans-serif;
+    }
+    .font-arabic {
+        font-family: var(--font-noto-arabic), var(--font-cairo), sans-serif;
     }
 }
 
@@ -19,10 +27,12 @@
 
 @layer base {
     :root {
-        --font-sans: var(--font-outfit), var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+        --font-sans: var(--font-cairo), var(--font-noto-arabic), var(--font-rubik), var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
         --font-mono: var(--font-geist-mono);
         --font-rubik: var(--font-rubik), sans-serif;
         --font-outfit: var(--font-outfit), sans-serif;
+        --font-cairo: var(--font-cairo), sans-serif;
+        --font-noto-arabic: var(--font-noto-arabic), sans-serif;
         --background: 0 0% 100%;
         --foreground: 180 5% 10%;
         --card: 0 0% 100%;
@@ -278,6 +288,3 @@
     color: hsl(var(--destructive)) !important;
     border-color: hsl(var(--destructive) / 0.2) !important;
 }
-
-
-
