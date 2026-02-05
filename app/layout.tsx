@@ -1,6 +1,6 @@
 import type React from "react"
 import "./globals.css"
-import { Outfit, Rubik, Rock_Salt } from "next/font/google"
+import { Outfit, Rubik, Rock_Salt, Cairo, Noto_Sans_Arabic } from "next/font/google"
 import type { Metadata } from "next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ColorThemeProvider } from "@/components/color-theme-provider"
@@ -19,6 +19,16 @@ const rubik = Rubik({
   variable: "--font-rubik",
   weight: "variable",
   display: "swap"
+})
+const cairo = Cairo({
+  subsets: ["latin", "arabic"],
+  variable: "--font-cairo",
+  display: "swap",
+})
+const notoSansArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  variable: "--font-noto-arabic",
+  display: "swap",
 })
 const rockSalt = Rock_Salt({ 
   weight: "400",
@@ -42,7 +52,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/Morx.png" type="image/png" />
       </head>
-      <body className={`${outfit.variable} ${rubik.variable} ${rockSalt.variable} font-sans`}>
+      <body className={`${outfit.variable} ${rubik.variable} ${cairo.variable} ${notoSansArabic.variable} ${rockSalt.variable} font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ColorThemeProvider defaultTheme="mint">
             <AuthProvider>
