@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { FileText, Edit, Save, X, Trash2, Eye, Code, ExternalLink } from 'lucide-react';
 
 interface TaskDocEditorProps {
-  taskId: number;
+  taskId: string;
   userId: string;
   canEdit: boolean;
   taskTitle?: string;

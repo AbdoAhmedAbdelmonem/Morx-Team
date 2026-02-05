@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('users')
-      .select('auth_user_id, first_name, last_name, email, profile_image, bio, skills, department, study_level, plan, links')
+      .select('auth_user_id, first_name, last_name, email, profile_image, bio, skills, department, study_level, plan, links, searching_teams_subjects')
       .eq('is_available', true);
 
     if (department) {

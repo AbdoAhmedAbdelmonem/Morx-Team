@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
     const { team_id, target_auth_user_id, message } = await request.json();
     const inviterAuthUserId = user.id;
 
+    console.log('[Invite API] Received:', { team_id, target_auth_user_id, message });
+
     if (!team_id || !target_auth_user_id) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'team_id and target_auth_user_id are required' },

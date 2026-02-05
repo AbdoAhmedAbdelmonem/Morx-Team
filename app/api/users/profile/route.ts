@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     // Query by auth_user_id (UUID)
     const { data: userProfile, error } = await supabase
       .from('users')
-      .select('auth_user_id, first_name, last_name, email, profile_image, plan, department, study_level, faculty, bio, skills, is_available, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, plan, department, study_level, faculty, bio, skills, is_available, searching_teams_subjects, links, created_at')
       .eq('auth_user_id', authUserId)
       .single();
 
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest) {
 
     const { data: updatedUser } = await supabase
       .from('users')
-      .select('auth_user_id, first_name, last_name, email, profile_image, plan, department, study_level, faculty, bio, skills, is_available, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, plan, department, study_level, faculty, bio, skills, is_available, searching_teams_subjects, links, created_at')
       .eq('auth_user_id', authUserId)
       .single();
 
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest) {
       data: updatedUser,
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    // console.error('Update profile error:', error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: 'Internal server error' },
       { status: 500 }

@@ -107,7 +107,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('[Complete Profile] Insert error:', insertError);
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Failed to create user: ' + insertError.message },
         { status: 500 }
@@ -149,7 +148,6 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('[Complete Profile] Error:', error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: 'Internal server error' },
       { status: 500 }

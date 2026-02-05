@@ -33,7 +33,7 @@ import { toast } from "sonner"
 import { AIDescriptionButton } from "@/components/ui/ai-description-button"
 
 interface Task {
-  task_id: number
+  task_id: string  // UUID
   title: string
   description: string
   status: number // 0=todo, 1=in-progress, 2=done
@@ -98,12 +98,13 @@ export default function ProjectPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false)
   const [comments, setComments] = useState<Comment[]>([])
-  const [files, setFiles] = useState<TaskFile[]>([])
   const [newComment, setNewComment] = useState("")
   const [isLoadingComments, setIsLoadingComments] = useState(false)
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false)
-  const [uploadingFile, setUploadingFile] = useState(false)
   const [lastDroppedId, setLastDroppedId] = useState<number | null>(null)
+
+  // Delete comment confirmation dialog
+  const [deleteCommentDialogOpen, setDeleteCommentDialogOpen] = useState(false)
+  const [commentToDelete, setCommentToDelete] = useState<number | null>(null)
 
   // View mode state
   const [viewMode, setViewMode] = useState<'kanban' | 'calendar'>('kanban')
@@ -208,8 +209,11 @@ export default function ProjectPage() {
 
       
       if (result.success) {
-
-        setTeamMembers(result.data || [])
+        // Deduplicate members based on auth_user_id
+        const uniqueMembers = Array.from(
+          new Map((result.data || []).map((m: any) => [m.auth_user_id, m])).values()
+        )
+        setTeamMembers(uniqueMembers)
       } else {
         console.error('Failed to fetch team members:', result.error)
       }
@@ -523,10 +527,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
   const openTaskDetails = async (task: Task) => {
     setSelectedTask(task)
     setIsTaskDetailsOpen(true)
-    await Promise.all([
-      fetchComments(task.task_id),
-      fetchFiles(task.task_id)
-    ])
+    fetchComments(task.task_id)
   }
 
   const fetchComments = async (taskId: number) => {
@@ -545,20 +546,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
     }
   }
 
-  const fetchFiles = async (taskId: number) => {
-    setIsLoadingFiles(true)
-    try {
-      const res = await fetch(`/api/tasks/files?task_id=${taskId}`)
-      const result = await res.json()
-      if (result.success) {
-        setFiles(result.data)
-      }
-    } catch (error) {
-      console.error('Error fetching files:', error)
-    } finally {
-      setIsLoadingFiles(false)
-    }
-  }
+
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !selectedTask || !user?.auth_user_id) return
@@ -584,21 +572,32 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
     }
   }
 
-  const handleDeleteComment = async (commentId: number) => {
-    if (!user?.auth_user_id) return
-    if (!confirm('Delete this comment?')) return
+  const openDeleteCommentDialog = (commentId: number) => {
+    setCommentToDelete(commentId)
+    setDeleteCommentDialogOpen(true)
+  }
+
+  const handleDeleteComment = async () => {
+    if (!user?.auth_user_id || !commentToDelete) return
     
     try {
-      const res = await fetch(`/api/tasks/comments?comment_id=${commentId}`, {
+      const res = await fetch(`/api/tasks/comments?comment_id=${commentToDelete}`, {
         method: 'DELETE'
       })
       
       const result = await res.json()
       if (result.success) {
-        setComments(prev => prev.filter(c => c.comment_id !== commentId))
+        setComments(prev => prev.filter(c => c.comment_id !== commentToDelete))
+        toast.success('Comment deleted successfully')
+      } else {
+        toast.error(result.error || 'Failed to delete comment')
       }
     } catch (error) {
       console.error('Error deleting comment:', error)
+      toast.error('An error occurred while deleting the comment')
+    } finally {
+      setDeleteCommentDialogOpen(false)
+      setCommentToDelete(null)
     }
   }
 
@@ -956,8 +955,8 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                                 const isSelected = selectedAssignees.includes(member.auth_user_id)
                                 return (
                                   <div
-                                  key={member.user_id}
-                                  className={cn(
+                                    key={member.auth_user_id}
+                                    className={cn(
                                     "flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer",
                                     isSelected 
                                       ? "bg-gradient-to-r from-primary/20 to-primary/10 border-2 border-primary shadow-sm scale-[1.02]" 
@@ -1340,7 +1339,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                   </div>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {teamMembers.map((member) => (
-                      <div key={member.user_id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                      <div key={member.auth_user_id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                         <div className="flex items-center gap-3">
                           <PlanAvatar
                             src={member.profile_image}
@@ -1373,7 +1372,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
               <DialogHeader>
                 <DialogTitle className="text-xl">{selectedTask?.title}</DialogTitle>
                 <DialogDescription>
-                  Task ID: {selectedTask?.task_id} | {selectedTask?.description}
+                  {selectedTask?.description}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1459,7 +1458,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                                         variant="ghost"
                                         size="icon"
                                         className="size-6 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-                                        onClick={() => handleDeleteComment(comment.comment_id)}
+                                        onClick={() => openDeleteCommentDialog(comment.comment_id)}
                                       >
                                         <X className="size-3" />
                                       </Button>
@@ -1496,24 +1495,35 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                       </h3>
                       <div className="space-y-2">
                         {selectedTask?.assigned_users ? (
-                          selectedTask.assigned_users.split('||').map((assignee: string, idx: number) => {
-                            const parts = assignee.split(':')
-                            const userId = parts[0]
-                            const name = parts[1] || ''
-                            const profileImage = parts.slice(2).join(':') || ''
-                            const memberPlan = teamMembers.find(m => m.auth_user_id === userId)?.plan
-                            return (
-                              <div key={idx} className="flex items-center gap-2 text-sm">
-                                <PlanAvatar
-                                  src={profileImage || undefined}
-                                  plan={memberPlan}
-                                  fallback={<span className="text-xs">{name.split(' ').map((n: string) => n[0]).join('')}</span>}
-                                  size="sm"
-                                />
-                                <span>{name}</span>
-                              </div>
+                          (() => {
+                            // Parse and deduplicate assignees by userId
+                            const assignees = selectedTask.assigned_users.split('||').map((assignee: string) => {
+                              const parts = assignee.split(':')
+                              return {
+                                userId: parts[0],
+                                name: parts[1] || '',
+                                profileImage: parts.slice(2).join(':') || ''
+                              }
+                            })
+                            // Remove duplicates based on userId
+                            const uniqueAssignees = Array.from(
+                              new Map(assignees.map(a => [a.userId, a])).values()
                             )
-                          })
+                            return uniqueAssignees.map((assignee) => {
+                              const memberPlan = teamMembers.find(m => m.auth_user_id === assignee.userId)?.plan
+                              return (
+                                <div key={assignee.userId} className="flex items-center gap-2 text-sm">
+                                  <PlanAvatar
+                                    src={assignee.profileImage || undefined}
+                                    plan={memberPlan}
+                                    fallback={<span className="text-xs">{assignee.name.split(' ').map((n: string) => n[0]).join('')}</span>}
+                                    size="sm"
+                                  />
+                                  <span>{assignee.name}</span>
+                                </div>
+                              )
+                            })
+                          })()
                         ) : (
                           <p className="text-sm text-muted-foreground">No one assigned</p>
                         )}
@@ -1531,7 +1541,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
                     {/* Documentation Section */}
                     <div className="space-y-2">
                       <TaskDocEditor
-                        taskId={selectedTask?.task_id || 0}
+                        taskId={selectedTask?.task_id || ""}
                         userId={user?.auth_user_id || ""}
                         canEdit={
                           selectedTask?.auth_user_id === user?.auth_user_id ||
@@ -1858,6 +1868,32 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
             </div>
           </DragDropContext>
           )}
+
+          {/* Delete Comment Confirmation Dialog */}
+          <Dialog open={deleteCommentDialogOpen} onOpenChange={setDeleteCommentDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Delete Comment</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete this comment? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setDeleteCommentDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={handleDeleteComment}
+                >
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
       <Footer />
@@ -2064,18 +2100,23 @@ function TaskCard({
         {task.assigned_users && (() => {
           const assignees = task.assigned_users.split('||').map((a: string) => {
             const parts = a.split(':')
-            const userId = parts[0]
-            const name = parts[1] || ''
-            const profileImage = parts.slice(2).join(':') || ''
-            return { userId, name, profileImage }
+            return {
+              userId: parts[0],
+              name: parts[1] || '',
+              profileImage: parts.slice(2).join(':') || ''
+            }
           })
-          return assignees.length > 0 && (
+          // Remove duplicates based on userId
+          const uniqueAssignees = Array.from(
+            new Map(assignees.map(a => [a.userId, a])).values()
+          )
+          return uniqueAssignees.length > 0 && (
             <div className="flex items-center -space-x-2">
-              {assignees.slice(0, 3).map((assignee: any, idx: number) => {
+              {uniqueAssignees.slice(0, 3).map((assignee: any) => {
                 const memberPlan = teamMembers.find((m: any) => m.auth_user_id === assignee.userId)?.plan
                 return (
                   <PlanAvatar
-                    key={idx}
+                    key={assignee.userId}
                     src={assignee.profileImage || undefined}
                     plan={memberPlan}
                     fallback={<span className="text-[10px] bg-primary/10">{assignee.name.split(' ').map((n: string) => n[0]).join('')}</span>}
@@ -2083,9 +2124,9 @@ function TaskCard({
                   />
                 )
               })}
-              {assignees.length > 3 && (
+              {uniqueAssignees.length > 3 && (
                 <div className="size-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-semibold">
-                  +{assignees.length - 3}
+                  +{uniqueAssignees.length - 3}
                 </div>
               )}
             </div>
@@ -2104,6 +2145,3 @@ function TaskCard({
     </motion.div>
   )
 }
-
-
-

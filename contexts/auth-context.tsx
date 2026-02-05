@@ -47,6 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           bio: userData.bio,
           skills: userData.skills,
           is_available: userData.is_available,
+          searching_teams_subjects: userData.searching_teams_subjects,
+          links: userData.links,
         }
         // // console.log('[AuthContext] Extracted user from cookie:', normalizedUser.email, 'ID:', normalizedUser.auth_user_id);
         return normalizedUser
@@ -82,6 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           bio: userData.bio,
           skills: userData.skills,
           is_available: userData.is_available,
+          searching_teams_subjects: userData.searching_teams_subjects,
+          links: userData.links,
         }
         return normalizedUser
       } catch (error) {
@@ -139,6 +143,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         bio: resolvedNewVal.bio ?? prev.bio,
         skills: resolvedNewVal.skills ?? prev.skills,
         is_available: resolvedNewVal.is_available ?? prev.is_available,
+        searching_teams_subjects: resolvedNewVal.searching_teams_subjects ?? prev.searching_teams_subjects,
+        links: resolvedNewVal.links ?? prev.links,
       };
 
       syncToStorage(merged);

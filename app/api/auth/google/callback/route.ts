@@ -51,6 +51,14 @@ export async function GET(request: NextRequest) {
         last_name: existingUser.last_name,
         email: existingUser.email,
         profile_image: existingUser.profile_image || '',
+        study_level: existingUser.study_level,
+        department: existingUser.department,
+        faculty: existingUser.faculty,
+        bio: existingUser.bio,
+        skills: existingUser.skills,
+        is_available: existingUser.is_available,
+        searching_teams_subjects: existingUser.searching_teams_subjects,
+        links: existingUser.links,
         created_at: existingUser.created_at,
         isLoggedIn: true
       };
@@ -76,7 +84,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${request.nextUrl.origin}/auth/complete-signup?data=${tempDataParam}`);
     }
   } catch (error) {
-    console.error('Google OAuth callback error:', error);
+    // console.error('Google OAuth callback error:', error);
     return NextResponse.redirect(`${request.nextUrl.origin}/signin?error=callback_error`);
   }
 }

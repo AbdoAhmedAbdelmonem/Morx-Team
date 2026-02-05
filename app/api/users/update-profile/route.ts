@@ -13,7 +13,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { first_name, last_name, password, study_level, department, faculty, bio, skills, is_available, links } = body;
+    const { first_name, last_name, password, study_level, department, faculty, bio, skills, is_available, links, searching_teams_subjects } = body;
 
     if (!first_name || !last_name) {
       return NextResponse.json<ApiResponse>(
@@ -63,14 +63,18 @@ export async function PUT(request: NextRequest) {
       updates.links = links;
     }
 
-    console.log('[Update Profile] Updates to apply:', updates);
+    if (searching_teams_subjects !== undefined) {
+      updates.searching_teams_subjects = searching_teams_subjects;
+    }
+
+    // console.log('[Update Profile] Updates to apply:', updates);
 
     // Execute update using auth_user_id from session
     const { data: updatedUser, error: updateError } = await supabase
       .from('users')
       .update(updates)
       .eq('auth_user_id', user.id)
-      .select('auth_user_id, first_name, last_name, email, profile_image, study_level, department, faculty, bio, skills, is_available, links, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, study_level, department, faculty, bio, skills, is_available, links, searching_teams_subjects, created_at')
       .single();
 
     if (updateError) throw updateError;
@@ -104,7 +108,7 @@ export async function PUT(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Update profile error:', error);
+    // console.error('Update profile error:', error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: 'Internal server error' },
       { status: 500 }
