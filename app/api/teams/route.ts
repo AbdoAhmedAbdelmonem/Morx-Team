@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         .select('team_id')
         .in('team_id', publicTeams?.map((t: any) => t.team_id) || []);
 
-      const memberCountMap: Record<number, number> = {};
+      const memberCountMap: Record<string, number> = {};
       memberCounts?.forEach((m: any) => {
         memberCountMap[m.team_id] = (memberCountMap[m.team_id] || 0) + 1;
       });
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         .select('team_id')
         .in('team_id', publicTeams?.map((t: any) => t.team_id) || []);
 
-      const projectCountMap: Record<number, number> = {};
+      const projectCountMap: Record<string, number> = {};
       projectCounts?.forEach((p: any) => {
         projectCountMap[p.team_id] = (projectCountMap[p.team_id] || 0) + 1;
       });
@@ -140,13 +140,13 @@ export async function GET(request: NextRequest) {
       .select('team_id')
       .in('team_id', teamIds);
 
-    const memberCountMap: Record<number, number> = {};
+    const memberCountMap: Record<string, number> = {};
     allMemberCounts?.forEach((m: any) => {
       memberCountMap[m.team_id] = (memberCountMap[m.team_id] || 0) + 1;
     });
 
     // Create role map
-    const roleMap: Record<number, string> = {};
+    const roleMap: Record<string, string> = {};
     memberships.forEach((m: any) => {
       roleMap[m.team_id] = m.role;
     });
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
       .select('team_id')
       .in('team_id', teamIds);
 
-    const projectCountMap: Record<number, number> = {};
+    const projectCountMap: Record<string, number> = {};
     projectCounts?.forEach((p: any) => {
       projectCountMap[p.team_id] = (projectCountMap[p.team_id] || 0) + 1;
     });

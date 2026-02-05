@@ -28,7 +28,7 @@ export async function GET(
       return NextResponse.json<ApiResponse>({
         success: true,
         data: {
-          task_id: parseInt(taskId),
+          task_id: taskId,
           content: '',
           exists: false
         }
@@ -163,7 +163,7 @@ export async function POST(
       const { data, error } = await supabase
         .from('task_docs')
         .insert({
-          task_id: parseInt(taskId),
+          task_id: taskId,
           content,
           auth_user_id: authUserId
         })

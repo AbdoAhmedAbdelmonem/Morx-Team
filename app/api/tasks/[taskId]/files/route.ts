@@ -16,13 +16,20 @@ export async function GET(
   try {
     const { taskId } = params;
     
+    console.log('[Task Files API] Fetching files for task:', taskId);
+    
     // Get task files
     const { data: files, error } = await supabase
-      .from('task_files')
+      .from('task_docs')
       .select('*')
       .eq('task_id', taskId);
 
-    if (error) throw error;
+    if (error) {
+      console.error('[Task Files API] Database error:', error);
+      throw error;
+    }
+
+    console.log('[Task Files API] Found files:', files?.length || 0);
 
     return NextResponse.json<ApiResponse>({
       success: true,

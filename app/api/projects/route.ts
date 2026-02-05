@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log(`[Projects API] Checking access for user ${authUserId} in team ${teamId}`);
+
     // Check if user is team member
     const { data: membership, error: memberError } = await supabase
       .from('team_members')
@@ -30,9 +32,10 @@ export async function GET(request: NextRequest) {
       .eq('team_id', teamId)
       .single();
 
+    console.log(`[Projects API] Membership result:`, { membership, error: memberError });
 
     if (memberError || !membership) {
-      console.warn(`[Projects API] Access Denied: User ${authUserId} is not in team ${teamId}`);
+      console.warn(`[Projects API] Access Denied: User ${authUserId} is not in team ${teamId}`, memberError);
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Not a team member' },
         { status: 403 }
@@ -66,7 +69,7 @@ export async function GET(request: NextRequest) {
     // Get task counts for each project
     const projectIds = projects?.map((p: any) => p.project_id) || [];
     
-    let taskCounts: Record<number, { total: number; completed: number }> = {};
+    let taskCounts: Record<string, { total: number; completed: number }> = {};
     
     if (projectIds.length > 0) {
       const { data: tasks } = await supabase
