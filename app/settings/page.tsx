@@ -443,7 +443,7 @@ export default function SettingsPage() {
   const planData = {
     name: PLAN_NAMES[userPlan],
     price: userPlan === 'free' ? "Free Forever" : userPlan === 'starter' ? "$29/month" : userPlan === 'professional' ? "$79/month" : "$199/month",
-    status: "Active",
+    status: "Active 31/12",
     borderColor: planBorderColor,
     features: PLAN_FEATURES[userPlan],
     limits: {
@@ -650,7 +650,7 @@ export default function SettingsPage() {
                     </Avatar>
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Profile Picture</p>
-                      <p className="text-xs text-muted-foreground italic">Your profile picture is synchronized with your authentication provider (Google) and cannot be changed manually Through our platform.</p>
+                      <p className="text-xs text-muted-foreground italic">Your profile picture is synchronized with your authentication provider and cannot be changed manually Through our platform.</p>
                     </div>
                   </div>
 
@@ -1294,4 +1294,5 @@ export default function SettingsPage() {
     </div>
   )
 }
+
 
