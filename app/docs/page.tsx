@@ -36,7 +36,8 @@ import {
   Briefcase,
   GraduationCap,
   Globe,
-  Star
+  Star,
+  Github
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -54,7 +55,7 @@ const sections = [
         <p className="text-muted-foreground">Welcome to <strong>Morx</strong>! We've built an advanced reports and statistics platform designed for modern teams who want to move fast with precision.</p>
         
         <div className="rounded-2xl overflow-hidden border bg-muted/20">
-          <img src="/Morx/Home.png" alt="Morx Dashboard" className="w-full object-cover shadow-2xl" />
+          <img src="./Morx/Home.png" alt="Morx Dashboard" className="w-full object-cover shadow-2xl" />
         </div>
 
         <div className="p-4 bg-primary/5 rounded-xl border-l-4 border-primary">
@@ -131,7 +132,7 @@ const sections = [
                  <div className="size-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500"><UserPlus className="size-4" /></div>
                  <div className="text-left">
                     <p className="text-sm font-bold">Sign Up Workflow</p>
-                    <p className="text-xs text-muted-foreground font-normal">A multi-step process to set up your professional profile.</p>
+                <p className="text-xs text-muted-foreground font-normal">A multi-step process to set up your professional profile. You can also skip the manual steps using <strong>GitHub</strong> or <strong>Google</strong> for instant identity creation.</p>
                  </div>
               </div>
             </AccordionTrigger>
@@ -217,15 +218,21 @@ const sections = [
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <p className="text-xs font-bold text-muted-foreground uppercase">Google OAuth</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase">OAuth Providers</p>
                     <div className="rounded-xl overflow-hidden border bg-muted/20">
-                      <img src="/Morx/login 2.png" alt="Login Provider" className="w-full object-cover" />
+                      <img src="/Morx/login 2.png" alt="Login Providers" className="w-full object-cover" />
                     </div>
                   </div>
                 </div>
-                <div className="p-4 bg-blue-500/5 rounded-xl border border-blue-500/20">
-                  <p className="text-sm font-bold flex items-center gap-2"><Shield className="size-4 text-blue-500" /> Google OAuth Integration</p>
-                  <p className="text-xs text-muted-foreground mt-1">Sign in quickly and securely using your Google account. Your profile image will be synced automatically.</p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="p-4 bg-blue-500/5 rounded-xl border border-blue-500/20">
+                    <p className="text-sm font-bold flex items-center gap-2"><Shield className="size-4 text-blue-500" /> Google OAuth Integration</p>
+                    <p className="text-xs text-muted-foreground mt-1">Sign in quickly and securely using your Google account. Your profile image and basic info will be synced automatically.</p>
+                  </div>
+                  <div className="p-4 bg-slate-500/5 rounded-xl border border-slate-500/20">
+                    <p className="text-sm font-bold flex items-center gap-2"><Github className="size-4 text-slate-500" /> GitHub Auth</p>
+                    <p className="text-xs text-muted-foreground mt-1">Developer-grade authentication. Perfect for syncing your identity and future repository integrations.</p>
+                  </div>
                 </div>
               </div>
             </AccordionContent>
@@ -279,10 +286,10 @@ const sections = [
            <ul className="grid gap-3">
               <li className="flex items-start gap-3">
                  <div className="size-5 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 mt-0.5"><CheckSquare className="size-3" /></div>
-                 <div>
+                  <div>
                     <p className="text-sm font-bold">Profile Sync</p>
-                    <p className="text-xs text-muted-foreground">Automatic synchronization with your Google account for a seamless experience.</p>
-                 </div>
+                    <p className="text-xs text-muted-foreground">Automatic synchronization with your <strong>Google</strong> or <strong>GitHub</strong> account for a seamless experience.</p>
+                  </div>
               </li>
               <li className="flex items-start gap-3">
                  <div className="size-5 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 mt-0.5"><CheckSquare className="size-3" /></div>
