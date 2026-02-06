@@ -15,8 +15,12 @@ import {
   Loader2,
   AlertCircle,
   Home,
-  Sparkles
+  Sparkles,
+  Sun,
+  Moon,
+  Github
 } from "lucide-react"
+import { useTheme } from "next-themes"
 
 export default function SignInPage() {
   const router = useRouter()
@@ -24,14 +28,20 @@ export default function SignInPage() {
   const [step, setStep] = useState(0) // 0: Splash, 1: Process
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [supabase, setSupabase] = useState<any>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Redirect logged-in users to home
   useEffect(() => {
-    if (!isAuthLoading && user) {
+    if (mounted && !isAuthLoading && user) {
       router.replace("/")
     }
-  }, [user, isAuthLoading, router])
+  }, [user, isAuthLoading, router, mounted])
 
   // Initialize Supabase client on mount
   useEffect(() => {
@@ -91,8 +101,42 @@ export default function SignInPage() {
     }
   }
 
+  const handleGithubSignIn = async () => {
+    if (!supabase) {
+      setError("Authentication node not ready. Wait a second.")
+      return
+    }
+
+    setLoading(true)
+    setError("")
+    
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (authError) {
+        setError(authError.message)
+        setLoading(false)
+        return
+      }
+
+      if (data?.url) {
+        window.location.href = data.url
+      }
+    } catch (e) {
+      setError("The gateway failed to initialize. Try again?")
+      setLoading(false)
+    }
+  }
+
+  if (!mounted) return null
+
   return (
-    <div className="-mt-24 -mb-12 h-screen bg-[#050505] text-white selection:bg-primary/30 relative overflow-hidden font-sans">
+    <div className="-mt-24 -mb-12 h-screen bg-background text-foreground selection:bg-primary/30 relative overflow-hidden font-sans">
       {/* Dynamic Aura Background */}
       <motion.div 
         className="absolute inset-0 z-0 pointer-events-none"
@@ -101,25 +145,45 @@ export default function SignInPage() {
           y: mousePos.y * 25,
         }}
       >
-        <div className="absolute top-[-15%] right-[-10%] size-[700px] bg-primary/10 rounded-full blur-[140px] animate-pulse transition-opacity duration-1000" />
-        <div className="absolute bottom-[-15%] left-[-10%] size-[700px] bg-secondary/10 rounded-full blur-[140px] animate-pulse delay-500 transition-opacity duration-1000" />
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+        <div className="absolute top-[-15%] right-[-10%] size-[700px] bg-primary/10 rounded-full blur-[140px] animate-pulse transition-opacity duration-1000 dark:bg-primary/10 light:bg-primary/5" />
+        <div className="absolute bottom-[-15%] left-[-10%] size-[700px] bg-secondary/10 rounded-full blur-[140px] animate-pulse delay-500 transition-opacity duration-1000 dark:bg-secondary/10 light:bg-secondary/5" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.05] dark:opacity-[0.02]" />
       </motion.div>
 
-      <div className="container relative z-10 h-full flex flex-col items-center justify-center px-4">
+      <div className="container relative z-10 h-full flex flex-col px-4 pt-12 pb-12">
         {/* Top Branding Anchor */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-12 left-0 right-0 flex items-center justify-center gap-3"
+          className="flex items-center justify-between w-full mb-8 relative z-20"
         >
-          <Link href="/" className="flex items-center gap-3 group">
-            <Image src="/Morx.png" alt="Morx" width={40} height={40} className="group-hover:rotate-12 transition-transform duration-500" />
-            <span className="text-xl font-black italic tracking-tighter rock-salt underline decoration-primary/50">Morx.</span>
+          <div className="flex-1" />
+          <Link href="/" className="flex items-center gap-2 font-bold group focus:outline-none">
+            <div className="relative size-9 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+              <Image 
+                src="/Morx upscaled.png" 
+                alt="Morx" 
+                width={36} 
+                height={36} 
+                className="size-full object-cover transition-transform group-hover:scale-110" 
+              />
+            </div>
+            <span className="text-xl rock-salt group-hover:text-primary transition-colors">Morx</span>
           </Link>
+          <div className="flex-1 flex justify-end">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="rounded-full hover:bg-foreground/5 transition-colors"
+            >
+              {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+            </Button>
+          </div>
         </motion.div>
 
-        <AnimatePresence mode="wait">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <AnimatePresence mode="wait">
           {/* STATE 0: Welcome Splash */}
           {step === 0 && (
             <motion.div 
@@ -131,20 +195,20 @@ export default function SignInPage() {
             >
               <div className="space-y-4">
                  <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none">
-                    Return to <span className="text-secondary">Core.</span>
+                    Return to <span className="text-primary">Core.</span>
                  </h1>
-                 <p className="text-xl text-neutral-500 font-medium tracking-wide">Ready to continue sculpting your digital workspace? The era awaits your return.</p>
+                 <p className="text-xl text-muted-foreground font-medium tracking-wide">Ready to continue sculpting your digital workspace? The era awaits your return.</p>
               </div>
               
               <div className="flex flex-col items-center gap-6">
                 <Button 
                   onClick={() => setStep(1)}
-                  className="h-20 px-14 rounded-full text-2xl font-black italic tracking-tighter bg-white text-black hover:scale-105 shadow-[0_20px_50px_-15px_rgba(255,255,255,0.2)] transition-all"
+                  className="h-20 px-14 rounded-full text-2xl font-black italic tracking-tighter bg-foreground text-background hover:scale-105 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_-15px_rgba(255,255,255,0.1)] transition-all"
                 >
                   I am Ready <ArrowRight className="ml-3 size-7" />
                 </Button>
                 
-                <Link href="/" className="text-neutral-500 hover:text-white flex items-center gap-2 text-xs font-black uppercase tracking-[0.3em] transition-colors">
+                <Link href="/" className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-xs font-black uppercase tracking-[0.3em] transition-colors">
                   <Home className="size-3" /> Back to Surface
                 </Link>
               </div>
@@ -162,25 +226,42 @@ export default function SignInPage() {
             >
               <div className="space-y-4 text-center">
                 <h2 className="text-5xl font-black italic tracking-tighter">Resync Identity.</h2>
-                <p className="text-lg text-neutral-500">Secure entry via your Google Cloud Protocol.</p>
+                <p className="text-lg text-muted-foreground">Secure entry via authorized digital protocols.</p>
               </div>
               
               <div className="grid gap-6">
-                 <button 
+                  <button 
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="flex items-center justify-between group p-8 rounded-[40px] bg-white text-black hover:scale-[1.03] transition-all text-left shadow-[0_30px_60px_-15px_rgba(255,255,255,0.15)]"
+                  className="flex items-center justify-between group p-5 rounded-[32px] bg-foreground text-background hover:scale-[1.02] transition-all text-left shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(255,255,255,0.05)]"
                  >
-                    <div className="flex items-center gap-6">
-                       <div className="size-16 rounded-3xl bg-white flex items-center justify-center p-4 shadow-sm group-hover:rotate-6 transition-transform">
+                    <div className="flex items-center gap-5">
+                       <div className="size-12 rounded-2xl bg-background flex items-center justify-center p-2.5 shadow-sm group-hover:rotate-6 transition-transform">
                           <svg viewBox="0 0 24 24" className="size-full"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
                        </div>
                        <div>
-                          <p className="text-3xl font-black italic tracking-tighter">Sync via Google</p>
-                          <p className="text-sm font-bold opacity-50 uppercase tracking-widest">Biometric Level Auth</p>
+                          <p className="text-2xl font-black italic tracking-tighter">Sync via Google</p>
+                          <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">Biometric Level Auth</p>
                        </div>
                     </div>
-                    {loading ? <Loader2 className="animate-spin size-10" /> : <ChevronRight className="size-10 text-black/10 group-hover:text-black transition-colors" />}
+                    {loading ? <Loader2 className="animate-spin size-7" /> : <ChevronRight className="size-7 opacity-10 group-hover:opacity-100 transition-opacity" />}
+                 </button>
+
+                 <button 
+                  onClick={handleGithubSignIn}
+                  disabled={loading}
+                  className="flex items-center justify-between group p-5 rounded-[32px] bg-foreground text-background hover:scale-[1.02] transition-all text-left shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(255,255,255,0.05)]"
+                 >
+                    <div className="flex items-center gap-5">
+                       <div className="size-12 rounded-2xl bg-foreground text-background flex items-center justify-center p-2.5 shadow-sm group-hover:rotate-6 transition-transform ring-1 ring-background/10">
+                          <Github className="size-full" />
+                       </div>
+                       <div>
+                          <p className="text-2xl font-black italic tracking-tighter">Sync via GitHub</p>
+                          <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">Developer Grade Auth</p>
+                       </div>
+                    </div>
+                    {loading ? <Loader2 className="animate-spin size-7" /> : <ChevronRight className="size-7 opacity-10 group-hover:opacity-100 transition-opacity" />}
                  </button>
 
                  {error && (
@@ -206,6 +287,7 @@ export default function SignInPage() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </div>
   )
