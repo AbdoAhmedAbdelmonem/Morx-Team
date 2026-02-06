@@ -47,6 +47,24 @@ export async function GET(
       );
     }
 
+    // Get team owner's faculty for comparison
+    const { data: teamMembers } = await supabase
+      .from('team_members')
+      .select('auth_user_id')
+      .eq('team_id', team.team_id)
+      .eq('role', 'owner')
+      .single();
+
+    let ownerFaculty = null;
+    if (teamMembers?.auth_user_id) {
+      const { data: ownerData } = await supabase
+        .from('users')
+        .select('faculty')
+        .eq('auth_user_id', teamMembers.auth_user_id)
+        .single();
+      ownerFaculty = ownerData?.faculty;
+    }
+
     // Get pending requests
     const { data: requests, error } = await supabase
       .from('team_join_requests')
@@ -57,14 +75,14 @@ export async function GET(
 
     if (error) throw error;
 
-    // Get user info for requesters
+    // Get user info for requesters including faculty
     const requesterIds = requests?.map((r: any) => r.auth_user_id) || [];
     let usersMap: Record<string, any> = {};
 
     if (requesterIds.length > 0) {
       const { data: users } = await supabase
         .from('users')
-        .select('auth_user_id, first_name, last_name, email, profile_image, plan')
+        .select('auth_user_id, first_name, last_name, email, profile_image, plan, faculty, links')
         .in('auth_user_id', requesterIds);
 
       users?.forEach((u: any) => {
@@ -75,6 +93,8 @@ export async function GET(
     const requestsWithUsers = requests?.map((r: any) => ({
       ...r,
       user: usersMap[r.auth_user_id] || null,
+      faculty_matches: ownerFaculty && usersMap[r.auth_user_id]?.faculty ? 
+        usersMap[r.auth_user_id].faculty === ownerFaculty : null,
     })) || [];
 
     return NextResponse.json<ApiResponse>({
