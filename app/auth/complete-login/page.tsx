@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function CompleteLoginPage() {
+function CompleteLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -30,7 +30,7 @@ export default function CompleteLoginPage() {
           router.replace('/teams');
         }
       } catch (error) {
-        console.error('Error setting up session:', error);
+        // console.error('Error setting up session:', error);
         router.replace('/signin?error=session_failed');
       }
     } else {
@@ -45,5 +45,20 @@ export default function CompleteLoginPage() {
         <p className="text-muted-foreground">Completing login...</p>
       </div>
     </div>
+  );
+}
+
+export default function CompleteLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading authentication...</p>
+        </div>
+      </div>
+    }>
+      <CompleteLoginContent />
+    </Suspense>
   );
 }
