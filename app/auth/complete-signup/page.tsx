@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
-export default function CompleteSignupPage() {
+function CompleteSignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -42,7 +42,7 @@ export default function CompleteSignupPage() {
           confirm_password: '',
         });
       } catch (error) {
-        console.error('Error parsing temp data:', error);
+        // console.error('Error parsing temp data:', error);
         router.replace('/signin?error=invalid_data');
       }
     } else {
@@ -75,8 +75,6 @@ export default function CompleteSignupPage() {
     setLoading(true);
 
     try {
-
-      
       const res = await fetch('/api/auth/complete-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,7 +103,7 @@ export default function CompleteSignupPage() {
         setError(result.error || 'Failed to create account');
       }
     } catch (error) {
-      console.error('Signup error:', error);
+      // console.error('Signup error:', error);
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -252,5 +250,20 @@ export default function CompleteSignupPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function CompleteSignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading signup form...</p>
+        </div>
+      </div>
+    }>
+      <CompleteSignupContent />
+    </Suspense>
   );
 }
