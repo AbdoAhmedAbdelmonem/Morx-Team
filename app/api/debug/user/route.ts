@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 /**
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
       user
     });
   } catch (error) {
-    console.error('Debug user error:', error);
+    // console.error('Debug user error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
