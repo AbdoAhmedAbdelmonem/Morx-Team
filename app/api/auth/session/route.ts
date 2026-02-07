@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { createClient } from '@/lib/supabase/server';
 import { ApiResponse } from '@/lib/types';
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Get session error:', error);
+    // console.error('Get session error:', error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: 'Internal server error' },
       { status: 500 }
