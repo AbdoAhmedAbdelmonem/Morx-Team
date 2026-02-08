@@ -56,7 +56,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ColorThemeProvider defaultTheme="mint">
             <AuthProvider>
-                <div className="pt-24 pb-12">
+                <div className="pt-12 pb-12">
                   {children}
                 </div>
               <Toaster position="top-right" closeButton />
