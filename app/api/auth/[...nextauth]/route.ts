@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { cookies } from 'next/headers';
 
@@ -40,12 +41,13 @@ export const authOptions = {
 
           // Must have auth_user_id - this is the UUID we use everywhere
           if (!user.auth_user_id) {
-            console.error('User missing auth_user_id:', credentials.email);
             return null;
           }
 
+          // Verify password (SHA-256 + bcrypt)
+          const sha256Hash = crypto.createHash('sha256').update(credentials.password).digest('hex');
           const isValidPassword = await bcrypt.compare(
-            credentials.password,
+            sha256Hash,
             user.password
           );
 
@@ -60,7 +62,6 @@ export const authOptions = {
             name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
           };
         } catch (error) {
-          console.error('Auth error:', error);
           return null;
         }
       },
@@ -104,7 +105,6 @@ export const authOptions = {
           }
           return true;
         } catch (error) {
-          console.error('Google sign-in error:', error);
           return false;
         }
       }
