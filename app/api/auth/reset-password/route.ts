@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { ApiResponse } from '@/lib/types';
 
 /**
@@ -25,9 +26,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash the new password
+    // Hash the new password (SHA-256 + bcrypt)
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(new_password, saltRounds);
+    const sha256Hash = crypto.createHash('sha256').update(new_password).digest('hex');
+    const hashedPassword = await bcrypt.hash(sha256Hash, saltRounds);
 
     // Update password in database using auth_user_id (UUID)
     const { data, error } = await supabase
