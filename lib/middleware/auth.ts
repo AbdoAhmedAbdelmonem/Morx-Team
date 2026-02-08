@@ -12,7 +12,6 @@ export interface AuthenticatedRequest extends NextRequest {
 }
 
 export async function requireAuth(request: NextRequest) {
-  console.log('[Auth] Starting auth check...');
   
   const session = await getServerSession(authOptions);
   
@@ -20,18 +19,15 @@ export async function requireAuth(request: NextRequest) {
   if (session?.user) {
     const potentialId = (session.user as any).auth_user_id || (session.user as any).id;
     
-    console.log('[Auth] Found session user:', session.user.email, 'with ID:', potentialId);
 
     // Valid UUID check: Must have dashes and be long enough
     if (potentialId && typeof potentialId === 'string' && potentialId.includes('-') && potentialId.length >= 32) {
-      console.log('[Auth] UUID Verified successfully for:', session.user.email);
       return {
         id: potentialId,
         email: session.user.email || '',
         name: session.user.name || '',
       };
     }
-    console.warn('[Auth] Alert: Session ID is NOT a valid UUID! ID:', potentialId);
   }
 
   // Fallback: Check for custom morx_session cookie
@@ -43,7 +39,6 @@ export async function requireAuth(request: NextRequest) {
       
       // If we have auth_user_id (UUID), use it
       if (userData?.auth_user_id && typeof userData.auth_user_id === 'string' && userData.auth_user_id.includes('-')) {
-        console.log('[Auth] Success: Found user via morx_session cookie:', userData.email);
         return {
           id: userData.auth_user_id,
           email: userData.email || '',
@@ -53,7 +48,6 @@ export async function requireAuth(request: NextRequest) {
 
       // SELF-HEALING: If we have an email but no valid auth_user_id, fetch it from DB
       if (userData?.email) {
-        console.log('[Auth] Stale session for', userData.email, '- fetching auth_user_id from DB...');
         const { data: dbUser } = await supabase
           .from('users')
           .select('auth_user_id, first_name, last_name, profile_image, plan, created_at')
@@ -61,7 +55,6 @@ export async function requireAuth(request: NextRequest) {
           .single();
 
         if (dbUser?.auth_user_id) {
-          console.log('[Auth] Self-healed session for', userData.email);
           const healedUser = {
             id: dbUser.auth_user_id,
             email: userData.email,
@@ -82,11 +75,9 @@ export async function requireAuth(request: NextRequest) {
         }
       }
     } catch (e) {
-      console.error('[Auth] Error parsing morx_session:', e);
     }
   }
 
-  console.warn('[Auth] Failure: No valid session or cookie found. Returning 401.');
   return NextResponse.json(
     { success: false, error: 'Unauthorized - Please login again' },
     { status: 401 }
@@ -114,7 +105,6 @@ export function withAuth(
 
     // If session was self-healed, persist the result back to the cookie
     if ((user as any)._healed && (user as any)._fullData) {
-      console.log('[Auth] Persisting healed session to cookie');
       response.cookies.set('morx_session', JSON.stringify((user as any)._fullData), {
         path: '/',
         maxAge: 60 * 60 * 24 * 7, // 1 week
