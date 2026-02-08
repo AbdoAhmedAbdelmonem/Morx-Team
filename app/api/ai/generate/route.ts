@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '@/lib/middleware/auth'
 
 // General-purpose AI generation endpoint
 // Uses OpenRouter or Gemini API
 // Rate limited based on user plan
+// Protected - requires authentication
 
 // Plan-based daily limits
 const PLAN_LIMITS: { [key: string]: number } = {
@@ -25,9 +27,16 @@ function getPlanLimit(plan: string | null): number {
 }
 
 export async function POST(request: NextRequest) {
+  // Require authentication
+  const user = await requireAuth(request);
+  
+  if (user instanceof NextResponse) {
+    return user; // Return 401 error
+  }
+
   try {
     const body = await request.json()
-    const { prompt, max_tokens = 500, userId } = body
+    const { prompt, max_tokens = 500 } = body
 
     if (!prompt) {
       return NextResponse.json(
@@ -36,12 +45,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'User ID is required' },
-        { status: 400 }
-      )
-    }
+    // Use authenticated user ID instead of request body
+    const userId = user.id;
 
     // Check rate limit using Supabase
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
