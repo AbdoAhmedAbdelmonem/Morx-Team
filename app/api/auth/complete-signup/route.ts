@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
+    // Check if user already exists in database
     const { data: existingUser } = await supabase
       .from('users')
       .select('auth_user_id')
@@ -45,26 +45,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Create Supabase Auth User
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { first_name, last_name }
-    });
+    // 1. Check if auth user already exists, or create new one
+    let authUserId: string;
+    
+    // First, try to get existing auth user by email
+    const { data: existingAuthUsers } = await supabase.auth.admin.listUsers();
+    const existingAuthUser = existingAuthUsers?.users?.find(u => u.email === email);
 
-    if (authError) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: authError.message },
-        { status: 400 }
-      );
+    if (existingAuthUser) {
+      // Auth user exists from previous attempt - use it
+      authUserId = existingAuthUser.id;
+      
+      // Update password if provided
+      if (password) {
+        await supabase.auth.admin.updateUserById(authUserId, {
+          password,
+          user_metadata: { first_name, last_name }
+        });
+      }
+    } else {
+      // Create new Supabase Auth User
+      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { first_name, last_name }
+      });
+
+      if (authError) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: authError.message },
+          { status: 400 }
+        );
+      }
+
+      authUserId = authUser.user.id;
     }
 
     // 2. Create user in public table
     const { data: newUser, error: createError } = await supabase
       .from('users')
       .insert({
-        auth_user_id: authUser.user.id,
+        auth_user_id: authUserId,
         first_name, 
         last_name, 
         email,
@@ -75,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       // Rollback auth user creation if public profile fails
-      await supabase.auth.admin.deleteUser(authUser.user.id);
+      await supabase.auth.admin.deleteUser(authUserId);
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Failed to create user: ' + createError.message },
         { status: 500 }
