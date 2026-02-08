@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '@/lib/middleware/auth'
 
 // AI Description Generator using Google Gemini API
 // Supports both English and Arabic (Egyptian dialect + Modern Standard Arabic)
 // Rate limited to 10 requests per user per day
+// Protected - requires authentication
 
 const DAILY_LIMIT = 10
 
@@ -258,10 +260,17 @@ function generateFallbackDescription(context: {
 }
 
 export async function POST(request: NextRequest) {
+  // Require authentication
+  const user = await requireAuth(request);
+  
+  if (user instanceof NextResponse) {
+    return user; // Return 401 error
+  }
+
   try {
     const body = await request.json()
     
-    const { type, name, userName, teamName, purpose, subject, additionalContext, userId } = body
+    const { type, name, userName, teamName, purpose, subject, additionalContext } = body
     
     if (!type || !name) {
       return NextResponse.json({
@@ -270,17 +279,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Check rate limit if userId is provided
-    if (userId) {
-      const rateLimit = await checkAndIncrementUsage(userId)
-      if (!rateLimit.allowed) {
-        return NextResponse.json({
-          success: false,
-          error: rateLimit.error,
-          limitReached: true,
-          remaining: 0
-        }, { status: 429 })
-      }
+    // Use authenticated user ID for rate limiting
+    const userId = user.id;
+    
+    const rateLimit = await checkAndIncrementUsage(userId)
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: rateLimit.error,
+        limitReached: true,
+        remaining: 0
+      }, { status: 429 })
     }
     
     // Use Gemini AI for generation
