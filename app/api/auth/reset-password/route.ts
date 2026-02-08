@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       .select('auth_user_id');
 
     if (error) {
-      console.error('Database error:', error);
+      // console.error('Database error:', error);
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Failed to update password' },
         { status: 500 }
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Reset password error:', error);
+    // console.error('Reset password error:', error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: 'Internal server error' },
       { status: 500 }
