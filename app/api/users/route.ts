@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { requireAuth } from '@/lib/middleware/auth';
 
 /**
  * Get all users (for search/browse functionality)
- * This is a public endpoint for user discovery
+ * Protected endpoint - requires authentication
  */
 export async function GET(request: NextRequest) {
+  // Require authentication
+  const user = await requireAuth(request);
+  
+  if (user instanceof NextResponse) {
+    return user; // Return 401 error
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const department = searchParams.get('department');
