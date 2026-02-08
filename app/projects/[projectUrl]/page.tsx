@@ -286,8 +286,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
-          max_tokens: 600,
-          userId: user.auth_user_id
+          max_tokens: 600
         })
       })
 
