@@ -226,8 +226,7 @@ Select the BEST candidates (3-10) who have the strongest match. Quality over qua
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
-          max_tokens: 800,
-          userId: user?.auth_user_id
+          max_tokens: 800
         })
       })
 
@@ -343,8 +342,7 @@ Select the BEST teams (3-8) that would be ideal for this candidate.`
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
-          max_tokens: 800,
-          userId: user.auth_user_id
+          max_tokens: 800
         })
       })
 
