@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
 interface Task {
-  task_id: number
+  task_id: string // UUID
   title: string
   description: string
   status: number // 0=todo, 1=in-progress, 2=done
