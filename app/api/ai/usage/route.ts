@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '@/lib/middleware/auth'
 
 // Plan-based daily limits (must match generate/route.ts)
 const PLAN_LIMITS: { [key: string]: number } = {
@@ -22,15 +23,16 @@ function getPlanLimit(plan: string | null): number {
 }
 
 export async function GET(request: NextRequest) {
-  try {
-    const userId = request.nextUrl.searchParams.get('userId')
+  // Require authentication
+  const user = await requireAuth(request);
+  
+  if (user instanceof NextResponse) {
+    return user; // Return 401 error
+  }
 
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'User ID is required' },
-        { status: 400 }
-      )
-    }
+  try {
+    // Use authenticated user ID
+    const userId = user.id;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
