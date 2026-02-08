@@ -100,7 +100,7 @@ export default function ProjectPage() {
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
   const [isLoadingComments, setIsLoadingComments] = useState(false)
-  const [lastDroppedId, setLastDroppedId] = useState<number | null>(null)
+  const [lastDroppedId, setLastDroppedId] = useState<string | null>(null)
 
   // Delete comment confirmation dialog
   const [deleteCommentDialogOpen, setDeleteCommentDialogOpen] = useState(false)
@@ -235,7 +235,7 @@ export default function ProjectPage() {
       return;
     }
 
-    const taskId = parseInt(draggableId);
+    const taskId = draggableId; // task_id is UUID string now
     const newStatus = parseInt(destination.droppableId);
 
     // Optimistic update: instantly move the task in the UI
@@ -373,7 +373,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
     }
   }
 
-  const handleUpdateTaskStatus = async (taskId: number, newStatus: number) => {
+  const handleUpdateTaskStatus = async (taskId: string, newStatus: number) => {
     if (!user?.auth_user_id) return
     
     try {
@@ -396,7 +396,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
     }
   }
 
-  const handleDeleteTask = async (taskId: number, taskTitle: string) => {
+  const handleDeleteTask = async (taskId: string, taskTitle: string) => {
     if (!user?.auth_user_id) return
     if (!confirm(`Delete "${taskTitle}"?`)) return
     
@@ -529,7 +529,7 @@ Make the tasks specific, actionable, and relevant to the project. Each task shou
     fetchComments(task.task_id)
   }
 
-  const fetchComments = async (taskId: number) => {
+  const fetchComments = async (taskId: string) => {
     setIsLoadingComments(true)
     try {
       const res = await fetch(`/api/tasks/comments?task_id=${taskId}`)
@@ -1917,8 +1917,8 @@ function TaskCard({
   teamMembers
 }: {
   task: Task
-  onStatusChange: (id: number, status: number) => void
-  onDelete: (id: number, title: string) => void
+  onStatusChange: (id: string, status: number) => void
+  onDelete: (id: string, title: string) => void
   onEdit: (task: Task) => void
   onOpenDetails: (task: Task) => void
   userRole: string
