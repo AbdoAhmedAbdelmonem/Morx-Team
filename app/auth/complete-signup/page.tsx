@@ -92,10 +92,11 @@ function CompleteSignupContent() {
 
       if (result.success) {
         // Save complete user session
-        localStorage.setItem('student_session', JSON.stringify(result.user));
+        const userData = result.data?.user || result.user;
+        localStorage.setItem('student_session', JSON.stringify(userData));
         
         // Trigger header update
-        window.dispatchEvent(new CustomEvent('userLogin', { detail: result.user }));
+        window.dispatchEvent(new CustomEvent('userLogin', { detail: userData }));
         
         // Redirect to teams
         router.replace('/teams');
