@@ -41,8 +41,7 @@ export function AIDescriptionButton({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...context,
-          userId: user?.auth_user_id
+          ...context
         })
       })
       
