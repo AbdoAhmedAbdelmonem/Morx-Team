@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   Globe,
   Loader2,
+  Sun,
+  Moon,
 } from "lucide-react"
 import {
   Select,
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/select"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
+import { useTheme } from "next-themes"
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -35,6 +38,8 @@ function getCookie(name: string): string | null {
 
 export default function CompleteProfilePage() {
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [step, setStep] = useState(1) // 1: Name, 2: Faculty, 3: Academic, 4: Security
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -47,6 +52,10 @@ export default function CompleteProfilePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [hasSession, setHasSession] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const tempSessionStr = getCookie('morx_temp_session')
@@ -119,17 +128,17 @@ export default function CompleteProfilePage() {
     }
   }
 
-  if (!hasSession) return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+  if (!mounted || !hasSession) return (
+    <div className="-mb-8 min-h-screen bg-background flex items-center justify-center">
        <div className="flex flex-col items-center gap-4">
           <Loader2 className="animate-spin text-primary size-12" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Syncing Stardust...</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Syncing Stardust...</p>
        </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-primary/30 relative overflow-hidden flex flex-col items-center justify-center p-4">
+    <div className="-mb-12 min-h-screen bg-background text-foreground selection:bg-primary/30 relative overflow-hidden flex flex-col items-center justify-center p-4">
       {/* Immersive Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[800px] bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full blur-[140px]" />
@@ -141,18 +150,31 @@ export default function CompleteProfilePage() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute top-12 left-0 right-0 flex items-center justify-center gap-3"
+        className="absolute top-4 left-0 right-0 flex items-center justify-between px-8"
       >
-        <div className="relative size-9 rounded-full bg-primary flex items-center justify-center overflow-hidden">
-          <Image 
-            src="/Morx upscaled.png" 
-            alt="Morx" 
-            width={36} 
-            height={36} 
-            className="size-full object-cover" 
-          />
+        <div className="flex-1" />
+        <div className="flex items-center gap-3">
+          <div className="relative size-9 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+            <Image 
+              src="/Morx upscaled.png" 
+              alt="Morx" 
+              width={36} 
+              height={36} 
+              className="size-full object-cover" 
+            />
+          </div>
+          <span className="text-xl font-black italic tracking-tighter rock-salt">Morx</span>
         </div>
-        <span className="text-xl font-black italic tracking-tighter rock-salt">Morx</span>
+        <div className="flex-1 flex justify-end">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="rounded-full hover:bg-foreground/5 transition-colors"
+          >
+            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          </Button>
+        </div>
       </motion.div>
 
       <div className="w-full max-w-xl relative">
@@ -161,22 +183,22 @@ export default function CompleteProfilePage() {
             <motion.div key="st1" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: -50 }} className="space-y-12">
                <div className="space-y-4">
                   <h2 className="text-5xl font-black italic tracking-tighter leading-none underline decoration-primary/30">Welcome, Explorer.</h2>
-                  <p className="text-lg text-neutral-500">Google core authenticated <span className="text-primary font-bold">[{email}]</span>. Let&apos;s finalize your digital identity.</p>
+                  <p className="text-lg text-muted-foreground">Google core authenticated <span className="text-primary font-bold">[{email}]</span>. Let&apos;s finalize your digital identity.</p>
                </div>
                
                <div className="grid gap-6">
                   <div className="space-y-2 relative group">
-                     <Label className="text-[10px] font-black uppercase tracking-widest text-primary absolute -top-2 left-6 bg-[#050505] px-2 z-10">First Name</Label>
-                     <Input value={firstName} onChange={(e)=>setFirstName(e.target.value)} className="h-20 text-3xl font-bold px-8 rounded-[40px] bg-white/5 border-2 border-white/5 focus-visible:ring-0 focus-visible:border-primary transition-all" />
+                     <Label className="text-[10px] font-black uppercase tracking-widest text-primary absolute -top-2 left-6 bg-background px-2 z-10">First Name</Label>
+                     <Input value={firstName} onChange={(e)=>setFirstName(e.target.value)} className="h-20 text-3xl font-bold px-8 rounded-[40px] bg-foreground/5 border-2 border-foreground/10 focus-visible:ring-0 focus-visible:border-primary transition-all" />
                   </div>
                   <div className="space-y-2 relative group">
-                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary absolute -top-2 left-6 bg-[#050505] px-2 z-10">Last Name</Label>
-                     <Input value={lastName} onChange={(e)=>setLastName(e.target.value)} className="h-20 text-3xl font-bold px-8 rounded-[40px] bg-white/5 border-2 border-white/5 focus-visible:ring-0 focus-visible:border-secondary transition-all" />
+                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary absolute -top-2 left-6 bg-background px-2 z-10">Last Name</Label>
+                     <Input value={lastName} onChange={(e)=>setLastName(e.target.value)} className="h-20 text-3xl font-bold px-8 rounded-[40px] bg-foreground/5 border-2 border-foreground/10 focus-visible:ring-0 focus-visible:border-secondary transition-all" />
                   </div>
                </div>
 
                {error && <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm text-center">{error}</div>}
-               <Button onClick={handleNext} className="w-full h-16 rounded-full text-xl font-black italic tracking-tighter bg-white text-black hover:scale-[1.02] transition-transform">Synchronize Identity <ArrowRight className="ml-2" /></Button>
+               <Button onClick={handleNext} className="w-full h-16 rounded-full text-xl font-black italic tracking-tighter bg-foreground text-background hover:scale-[1.02] transition-transform">Synchronize Identity <ArrowRight className="ml-2" /></Button>
             </motion.div>
           )}
 
@@ -184,17 +206,17 @@ export default function CompleteProfilePage() {
             <motion.div key="st_faculty" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="space-y-12">
                <div className="space-y-4">
                   <h2 className="text-5xl font-black italic tracking-tighter leading-none">Your Campus.</h2>
-                  <p className="text-lg text-neutral-500">Select your base of operations within the university system.</p>
+                  <p className="text-lg text-muted-foreground">Select your base of operations within the university system.</p>
                </div>
 
                <div className="grid gap-6">
                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-4">Choose Faculty</Label>
                     <Select value={faculty} onValueChange={setFaculty}>
-                       <SelectTrigger className="h-20 text-xl font-bold px-8 rounded-[40px] bg-white/5 border-2 border-white/5 focus-visible:ring-0 border-primary/20">
+                       <SelectTrigger className="h-20 text-xl font-bold px-8 rounded-[40px] bg-foreground/5 border-2 border-foreground/10 focus-visible:ring-0 border-primary/20">
                           <SelectValue placeholder="Select faculty" />
                        </SelectTrigger>
-                       <SelectContent className="bg-[#0a0a0a] border-white/10 text-white rounded-3xl max-h-[300px]">
+                       <SelectContent className="bg-popover border-border text-foreground rounded-3xl max-h-[300px]">
                           {FACULTIES.map((f) => (
                              <SelectItem key={f} value={f}>{f}</SelectItem>
                           ))}
@@ -205,7 +227,7 @@ export default function CompleteProfilePage() {
 
                {error && <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm text-center">{error}</div>}
                <div className="flex gap-4">
-                  <Button variant="ghost" onClick={()=>setStep(1)} className="h-14 px-8 rounded-full border border-white/5 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
+                  <Button variant="ghost" onClick={()=>setStep(1)} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
                   <Button onClick={handleNext} className="flex-1 h-16 rounded-full text-xl font-black italic tracking-tighter bg-primary text-white hover:scale-[1.02] transition-all">Continue <ArrowRight className="ml-2" /></Button>
                </div>
             </motion.div>
@@ -215,17 +237,17 @@ export default function CompleteProfilePage() {
             <motion.div key="st3" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="space-y-12">
                <div className="space-y-4">
                   <h2 className="text-5xl font-black italic tracking-tighter leading-none">Your Domain.</h2>
-                  <p className="text-lg text-neutral-500">Professional context matters. Choose your academic specialization below.</p>
+                  <p className="text-lg text-muted-foreground">Professional context matters. Choose your academic specialization below.</p>
                </div>
 
                <div className="grid gap-6">
                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-4">Education Level</Label>
                     <Select value={studyLevel} onValueChange={setStudyLevel}>
-                       <SelectTrigger className="h-20 text-2xl font-bold px-8 rounded-[40px] bg-white/5 border-2 border-white/5 focus-visible:ring-0 border-primary/20">
+                       <SelectTrigger className="h-20 text-2xl font-bold px-8 rounded-[40px] bg-foreground/5 border-2 border-foreground/10 focus-visible:ring-0 border-primary/20">
                           <SelectValue placeholder="Current Level" />
                        </SelectTrigger>
-                       <SelectContent className="bg-[#0a0a0a] border-white/10 text-white rounded-3xl">
+                       <SelectContent className="bg-popover border-border text-foreground rounded-3xl">
                           <SelectItem value="1">Level 1 - Foundation</SelectItem>
                           <SelectItem value="2">Level 2 - Explorer</SelectItem>
                           <SelectItem value="3">Level 3 - Professional</SelectItem>
@@ -236,10 +258,10 @@ export default function CompleteProfilePage() {
                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary ml-4">Specialization</Label>
                     <Select value={department} onValueChange={setDepartment}>
-                       <SelectTrigger className="h-20 text-2xl font-bold px-8 rounded-[40px] bg-white/5 border-2 border-white/5 focus-visible:ring-0 border-secondary/20">
+                       <SelectTrigger className="h-20 text-2xl font-bold px-8 rounded-[40px] bg-foreground/5 border-2 border-foreground/10 focus-visible:ring-0 border-secondary/20">
                           <SelectValue placeholder="Department" />
                        </SelectTrigger>
-                       <SelectContent className="bg-[#0a0a0a] border-white/10 text-white rounded-3xl">
+                       <SelectContent className="bg-popover border-border text-foreground rounded-3xl">
                           {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
                              <SelectItem key={code} value={code}>{name}</SelectItem>
                           ))}
@@ -250,7 +272,7 @@ export default function CompleteProfilePage() {
 
                {error && <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm text-center">{error}</div>}
                <div className="flex gap-4">
-                  <Button variant="ghost" onClick={()=>setStep(2)} className="h-14 px-8 rounded-full border border-white/5 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
+                  <Button variant="ghost" onClick={()=>setStep(2)} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
                   <Button onClick={handleNext} className="flex-1 h-16 rounded-full text-xl font-black italic tracking-tighter bg-primary text-white hover:scale-[1.02] transition-all">Proceed to Security <ArrowRight className="ml-2" /></Button>
                </div>
             </motion.div>
@@ -260,17 +282,17 @@ export default function CompleteProfilePage() {
             <motion.div key="st4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12">
                <div className="space-y-4">
                   <h2 className="text-5xl font-black italic tracking-tighter leading-none">Security Lock.</h2>
-                  <p className="text-lg text-neutral-500">Create a secondary password as a backup to your Google auth.</p>
+                  <p className="text-lg text-muted-foreground">Create a secondary password as a backup to your Google auth.</p>
                </div>
 
                <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2 relative group">
-                     <Label className="text-[10px] font-black uppercase tracking-widest text-primary absolute -top-2 left-6 bg-[#050505] px-2 z-10">Backup Password</Label>
-                     <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className="h-20 text-3xl font-bold px-8 rounded-[40px] bg-white/5 border-2 border-white/5 focus-visible:ring-0 border-primary shadow-[0_0_30px_-10px_rgba(var(--primary),0.2)]" required />
+                     <Label className="text-[10px] font-black uppercase tracking-widest text-primary absolute -top-2 left-6 bg-background px-2 z-10">Backup Password</Label>
+                     <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className="h-20 text-3xl font-bold px-8 rounded-[40px] bg-foreground/5 border-2 border-foreground/10 focus-visible:ring-0 border-primary shadow-[0_0_30px_-10px_rgba(var(--primary),0.2)]" required />
                   </div>
                   <div className="space-y-2 relative group">
-                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary absolute -top-2 left-6 bg-[#050505] px-2 z-10">Verify Backup</Label>
-                     <Input type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} className="h-20 text-3xl font-bold px-8 rounded-[40px] bg-white/5 border-2 border-white/5 focus-visible:ring-0 border-secondary shadow-[0_0_30px_-10px_rgba(var(--secondary),0.2)]" required />
+                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary absolute -top-2 left-6 bg-background px-2 z-10">Verify Backup</Label>
+                     <Input type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} className="h-20 text-3xl font-bold px-8 rounded-[40px] bg-foreground/5 border-2 border-foreground/10 focus-visible:ring-0 border-secondary shadow-[0_0_30px_-10px_rgba(var(--secondary),0.2)]" required />
                   </div>
 
                   {error && <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm text-center">{error}</div>}
@@ -279,7 +301,7 @@ export default function CompleteProfilePage() {
                     <Button type="button" variant="ghost" onClick={()=>{
                       if (faculty === FCDS_FACULTY_NAME) setStep(3)
                       else setStep(2)
-                    }} className="h-14 px-8 rounded-full border border-white/5 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
+                    }} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
                     <Button disabled={loading} type="submit" className="flex-1 h-20 rounded-[40px] text-2xl font-black italic tracking-tighter bg-gradient-to-r from-primary to-secondary text-white hover:scale-[1.02] transition-all">
                        {loading ? <Loader2 className="animate-spin size-8" /> : "Initiate Launch"}
                     </Button>
@@ -298,4 +320,3 @@ export default function CompleteProfilePage() {
     </div>
   )
 }
-
