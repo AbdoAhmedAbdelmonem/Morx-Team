@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ApiResponse } from '@/lib/types';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 /**
  * Complete profile for new OAuth users
@@ -94,9 +95,10 @@ export async function POST(request: NextRequest) {
       faculty
     };
 
-    // Hash password if provided
+    // Hash password if provided (SHA-256 + bcrypt for enhanced security)
     if (password) {
-      userData.password = await bcrypt.hash(password, 10);
+      const sha256Hash = crypto.createHash('sha256').update(password).digest('hex');
+      userData.password = await bcrypt.hash(sha256Hash, 10);
     }
 
     // NOW create the user in the database
