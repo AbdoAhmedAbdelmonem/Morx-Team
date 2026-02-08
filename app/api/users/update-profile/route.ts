@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/middleware/auth';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { ApiResponse } from '@/lib/types';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 /**
  * Update user profile - uses authenticated user's ID from session
@@ -29,7 +30,8 @@ export async function PUT(request: NextRequest) {
     };
 
     if (password && password.trim() !== '') {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const sha256Hash = crypto.createHash('sha256').update(password).digest('hex');
+      const hashedPassword = await bcrypt.hash(sha256Hash, 10);
       updates.password = hashedPassword;
     }
     
@@ -58,9 +60,31 @@ export async function PUT(request: NextRequest) {
     }
 
     if (links !== undefined) {
-      // Store links as JSON - ensure it's a valid object
-      // If the column expects an array, wrap it; otherwise store as object
-      updates.links = links;
+      // Merge links safely: avoid overwriting existing links with empty/undefined values
+      try {
+        const { data: existingUserLinks } = await supabase
+          .from('users')
+          .select('links')
+          .eq('auth_user_id', user.id)
+          .single();
+
+        const existingLinks = (existingUserLinks && existingUserLinks.links) ? existingUserLinks.links : {};
+        const mergedLinks: Record<string, any> = { ...existingLinks };
+
+        if (links && typeof links === 'object') {
+          // Only copy non-empty string values from incoming links to avoid accidental deletion
+          ['github', 'linkedin', 'facebook', 'whatsapp'].forEach((k) => {
+            if (Object.prototype.hasOwnProperty.call(links, k) && links[k]) {
+              mergedLinks[k] = links[k];
+            }
+          });
+        }
+
+        updates.links = mergedLinks;
+      } catch (e) {
+        // If merge fails for any reason, fall back to storing provided links object
+        updates.links = links;
+      }
     }
 
     if (searching_teams_subjects !== undefined) {
@@ -115,4 +139,3 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-
