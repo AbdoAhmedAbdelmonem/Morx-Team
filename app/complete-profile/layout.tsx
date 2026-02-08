@@ -5,5 +5,5 @@ export default function CompleteProfileLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  return <div className="-mt-20">{children}</div>
 }
