@@ -16,12 +16,12 @@ const plans = [
     price: { monthly: "$29", annually: "$23" },
     description: "Perfect for small teams and startups starting their journey.",
     features: [
-      "Up to 5 team members",
+      "Up to 50 team members",
       "Basic analytics dashboard",
-      "5GB secure storage",
       "Email support (24h response)",
       "Standard task management",
-      "Community templates access"
+      "Community templates access",
+      "10 Daily AI Requests"
     ],
     cta: "Start Free Trial",
     popular: false
@@ -31,14 +31,14 @@ const plans = [
     price: { monthly: "$79", annually: "$63" },
     description: "Ideal for growing businesses needing advanced insights.",
     features: [
-      "Up to 20 team members",
+      "Up to 80 team members",
       "Advanced analytics & trends",
-      "25GB secure storage",
       "Priority email support",
       "Full API access",
       "Custom project templates",
       "Team activity tracking",
-      "Workload distribution"
+      "Workload distribution",
+      "20 Daily AI Requests"
     ],
     cta: "Start Free Trial",
     popular: true
@@ -50,12 +50,13 @@ const plans = [
     features: [
       "Unlimited team members",
       "Custom analytics & BI",
-      "Unlimited secure storage",
       "24/7 Phone & Email support",
       "Advanced API with webhooks",
       "Custom integrations",
       "Dedicated account manager",
-      "SSO & advanced security"
+      "SSO & advanced security",
+      "Unlimited Daily AI Requests"
+
     ],
     cta: "Contact Sales",
     popular: false
@@ -159,13 +160,13 @@ export default function PricingPage() {
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {[
-                    ["Team Members", "Up to 5", "Up to 20", "Unlimited"],
+                    ["Team Members", "Up to 50", "Up to 80", "Unlimited"],
                     ["Analytics", "Basic", "Advanced", "Custom BI"],
-                    ["Storage", "5GB", "25GB", "Unlimited"],
+                    ["AI usage per day", "10", "20", "Unlimited"],
                     ["API Access", "None", "Full", "Advanced + Webhooks"],
                     ["Support", "Email", "Priority Email", "24/7 Phone & Email"],
                     ["Task Documentation", "✓", "✓", "✓"],
-                    ["Custom Templates", "✕", "✓", "✓"],
+                    ["Custom Templates", "✓", "✓", "✓"],
                     ["Marketplace Access", "✓", "✓", "✓"],
                   ].map((row, i) => (
                     <tr key={i} className="hover:bg-muted/50 transition-colors">
@@ -197,3 +198,4 @@ export default function PricingPage() {
     </div>
   )
 }
+
