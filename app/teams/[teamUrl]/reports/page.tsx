@@ -647,26 +647,22 @@ export default function TeamReportsPage() {
           </div>
 
           <Tabs defaultValue="projects" className="space-y-4">
-            <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="projects" className="text-xs sm:text-sm">
-                <FolderKanban className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Projects</span>
-                <span className="sm:hidden">Proj</span>
+                <FolderKanban className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline sm:ml-2">Projects</span>
               </TabsTrigger>
               <TabsTrigger value="members" className="text-xs sm:text-sm">
-                <Users className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Team Members</span>
-                <span className="sm:hidden">Team</span>
+                <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline sm:ml-2">Team Members</span>
               </TabsTrigger>
               <TabsTrigger value="timeline" className="text-xs sm:text-sm">
-                <Calendar className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Timeline</span>
-                <span className="sm:hidden">Time</span>
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline sm:ml-2">Timeline</span>
               </TabsTrigger>
               <TabsTrigger value="insights" className="text-xs sm:text-sm">
-                <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Report & Insights</span>
-                <span className="sm:hidden">Insights</span>
               </TabsTrigger>
             </TabsList>
 
