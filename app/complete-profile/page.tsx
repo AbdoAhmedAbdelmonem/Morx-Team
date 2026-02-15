@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select"
 import { DEPARTMENT_NAMES } from "@/lib/constants/subjects"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
+import { EGYPTIAN_GOVERNORATES } from "@/lib/constants/governorates"
 import { useTheme } from "next-themes"
 
 function getCookie(name: string): string | null {
@@ -40,10 +41,11 @@ export default function CompleteProfilePage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const [step, setStep] = useState(1) // 1: Name, 2: Faculty, 3: Academic, 4: Security
+  const [step, setStep] = useState(1) // 1: Name, 2: Governorate, 3: Faculty, 4: Academic, 5: Security
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
+  const [governorate, setGovernorate] = useState<string>("")
   const [faculty, setFaculty] = useState<string>("")
   const [studyLevel, setStudyLevel] = useState<string>("")
   const [department, setDepartment] = useState<string>("")
@@ -77,12 +79,13 @@ export default function CompleteProfilePage() {
   const handleNext = () => {
     setError("")
     if (step === 1 && (!firstName || !lastName)) { setError("Names are required to build your profile DNA."); return }
-    if (step === 2 && !faculty) { setError("Faculty selection is required to proceed."); return }
-    if (step === 3 && (!studyLevel || !department)) { setError("Academic focus is mandatory for team placement."); return }
+    if (step === 2 && !governorate) { setError("Governorate selection is required to proceed."); return }
+    if (step === 3 && !faculty) { setError("Faculty selection is required to proceed."); return }
+    if (step === 4 && (!studyLevel || !department)) { setError("Academic focus is mandatory for team placement."); return }
     
-    // Logic to skip Academic step (step 3) if not FCDS
-    if (step === 2 && faculty !== FCDS_FACULTY_NAME) {
-      setStep(4)
+    // Logic to skip Academic step (step 4) if not FCDS
+    if (step === 3 && faculty !== FCDS_FACULTY_NAME) {
+      setStep(5)
       return
     }
     
@@ -100,6 +103,7 @@ export default function CompleteProfilePage() {
       first_name: firstName, 
       last_name: lastName, 
       password,
+      governorate,
       faculty,
       study_level: studyLevel || null,
       department: department || null
@@ -203,6 +207,37 @@ export default function CompleteProfilePage() {
           )}
 
           {step === 2 && (
+            <motion.div key="st_governorate" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="space-y-12">
+               <div className="space-y-4">
+                  <h2 className="text-5xl font-black italic tracking-tighter leading-none">Your Location.</h2>
+                  <p className="text-lg text-muted-foreground">Select your governorate to connect with nearby talent.</p>
+               </div>
+
+               <div className="grid gap-6">
+                 <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-4">Choose Governorate</Label>
+                    <Select value={governorate} onValueChange={setGovernorate}>
+                       <SelectTrigger className="h-20 text-xl font-bold px-8 rounded-[40px] bg-foreground/5 border-2 border-foreground/10 focus-visible:ring-0 border-primary/20">
+                          <SelectValue placeholder="Select governorate" />
+                       </SelectTrigger>
+                       <SelectContent className="bg-popover border-border text-foreground rounded-3xl max-h-[300px]">
+                          {EGYPTIAN_GOVERNORATES.map((gov) => (
+                             <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+                          ))}
+                       </SelectContent>
+                    </Select>
+                 </div>
+               </div>
+
+               {error && <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm text-center">{error}</div>}
+               <div className="flex gap-4">
+                  <Button variant="ghost" onClick={()=>setStep(1)} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
+                  <Button onClick={handleNext} className="flex-1 h-16 rounded-full text-xl font-black italic tracking-tighter bg-primary text-white hover:scale-[1.02] transition-all">Continue <ArrowRight className="ml-2" /></Button>
+               </div>
+            </motion.div>
+          )}
+
+          {step === 3 && (
             <motion.div key="st_faculty" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="space-y-12">
                <div className="space-y-4">
                   <h2 className="text-5xl font-black italic tracking-tighter leading-none">Your Campus.</h2>
@@ -227,14 +262,14 @@ export default function CompleteProfilePage() {
 
                {error && <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm text-center">{error}</div>}
                <div className="flex gap-4">
-                  <Button variant="ghost" onClick={()=>setStep(1)} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
+                  <Button variant="ghost" onClick={()=>setStep(2)} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
                   <Button onClick={handleNext} className="flex-1 h-16 rounded-full text-xl font-black italic tracking-tighter bg-primary text-white hover:scale-[1.02] transition-all">Continue <ArrowRight className="ml-2" /></Button>
                </div>
             </motion.div>
           )}
 
-          {step === 3 && (
-            <motion.div key="st3" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="space-y-12">
+          {step === 4 && (
+            <motion.div key="st4_academic" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="space-y-12">
                <div className="space-y-4">
                   <h2 className="text-5xl font-black italic tracking-tighter leading-none">Your Domain.</h2>
                   <p className="text-lg text-muted-foreground">Professional context matters. Choose your academic specialization below.</p>
@@ -272,14 +307,14 @@ export default function CompleteProfilePage() {
 
                {error && <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm text-center">{error}</div>}
                <div className="flex gap-4">
-                  <Button variant="ghost" onClick={()=>setStep(2)} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
+                  <Button variant="ghost" onClick={()=>setStep(3)} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
                   <Button onClick={handleNext} className="flex-1 h-16 rounded-full text-xl font-black italic tracking-tighter bg-primary text-white hover:scale-[1.02] transition-all">Proceed to Security <ArrowRight className="ml-2" /></Button>
                </div>
             </motion.div>
           )}
 
-          {step === 4 && (
-            <motion.div key="st4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12">
+          {step === 5 && (
+            <motion.div key="st5_security" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12">
                <div className="space-y-4">
                   <h2 className="text-5xl font-black italic tracking-tighter leading-none">Security Lock.</h2>
                   <p className="text-lg text-muted-foreground">Create a secondary password as a backup to your Google auth.</p>
@@ -299,8 +334,8 @@ export default function CompleteProfilePage() {
                   
                   <div className="flex gap-4">
                     <Button type="button" variant="ghost" onClick={()=>{
-                      if (faculty === FCDS_FACULTY_NAME) setStep(3)
-                      else setStep(2)
+                      if (faculty === FCDS_FACULTY_NAME) setStep(4)
+                      else setStep(3)
                     }} className="h-14 px-8 rounded-full border border-foreground/10 font-bold"><ArrowLeft className="mr-2" /> Back</Button>
                     <Button disabled={loading} type="submit" className="flex-1 h-20 rounded-[40px] text-2xl font-black italic tracking-tighter bg-gradient-to-r from-primary to-secondary text-white hover:scale-[1.02] transition-all">
                        {loading ? <Loader2 className="animate-spin size-8" /> : "Initiate Launch"}
