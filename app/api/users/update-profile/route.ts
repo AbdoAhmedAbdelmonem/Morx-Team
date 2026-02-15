@@ -14,7 +14,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { first_name, last_name, password, study_level, department, faculty, bio, skills, is_available, links, searching_teams_subjects } = body;
+    const { first_name, last_name, password, governorate, study_level, department, faculty, bio, skills, is_available, links, searching_teams_subjects } = body;
 
     if (!first_name || !last_name) {
       return NextResponse.json<ApiResponse>(
@@ -45,6 +45,10 @@ export async function PUT(request: NextRequest) {
 
     if (faculty !== undefined) {
       updates.faculty = faculty;
+    }
+
+    if (governorate !== undefined) {
+      updates.governorate = governorate;
     }
 
     if (bio !== undefined) {
@@ -98,7 +102,7 @@ export async function PUT(request: NextRequest) {
       .from('users')
       .update(updates)
       .eq('auth_user_id', user.id)
-      .select('auth_user_id, first_name, last_name, email, profile_image, study_level, department, faculty, bio, skills, is_available, links, searching_teams_subjects, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, governorate, study_level, department, faculty, bio, skills, is_available, links, searching_teams_subjects, created_at')
       .single();
 
     if (updateError) throw updateError;
