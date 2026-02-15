@@ -16,29 +16,30 @@ export async function GET(request: NextRequest) {
     const skill = searchParams.get('skill');
     const department = searchParams.get('department');
 
-    // Get current user's faculty to filter by same college only
+    // Get current user's faculty and governorate to filter by same college AND same governorate
     const { data: currentUser, error: userError } = await supabase
       .from('users')
-      .select('faculty')
+      .select('faculty, governorate')
       .eq('auth_user_id', user.id)
       .single();
 
     if (userError) throw userError;
 
-    // If current user has no faculty set, return empty array
-    if (!currentUser?.faculty) {
+    // If current user has no faculty or governorate set, return empty array
+    if (!currentUser?.faculty || !currentUser?.governorate) {
       return NextResponse.json<ApiResponse>({
         success: true,
         data: [],
       });
     }
 
-    // Query users from the same faculty only
+    // Query users from the same faculty AND same governorate only
     let query = supabase
       .from('users')
-      .select('auth_user_id, first_name, last_name, email, profile_image, bio, skills, department, study_level, plan, links, searching_teams_subjects, faculty')
+      .select('auth_user_id, first_name, last_name, email, profile_image, bio, skills, department, study_level, plan, links, searching_teams_subjects, faculty, governorate')
       .eq('is_available', true)
-      .eq('faculty', currentUser.faculty); // Filter by same faculty
+      .eq('faculty', currentUser.faculty) // Filter by same faculty
+      .eq('governorate', currentUser.governorate); // Filter by same governorate
 
     if (department) {
       query = query.eq('department', department);
