@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { User, CreditCard, Palette, Shield, ChevronRight, Check, Sun, Moon, Laptop, Clock, Sparkles } from "lucide-react"
 import { FACULTIES, FCDS_FACULTY_NAME } from "@/lib/constants/faculties"
 import { DEPARTMENT_NAMES, FCDS_SUBJECTS } from "@/lib/constants/subjects"
+import { EGYPTIAN_GOVERNORATES } from "@/lib/constants/governorates"
 import { PLAN_LIMITS, getPlanLimit, getPlanBorderColor, getAiDailyLimit } from "@/lib/constants/plans"
 import { PlanType } from "@/lib/types"
 import { toast } from "sonner"
@@ -236,6 +237,7 @@ export default function SettingsPage() {
         studyLevel: authUser.study_level?.toString() || "",
         department: authUser.department || "",
         faculty: authUser.faculty || "",
+        governorate: authUser.governorate || "",
         bio: authUser.bio || "",
         skills: Array.isArray(authUser.skills) ? authUser.skills : [],
         is_available: authUser.is_available ?? true,
@@ -256,6 +258,7 @@ export default function SettingsPage() {
       studyLevel: "",
       department: "",
       faculty: "",
+      governorate: "",
       bio: "",
       skills: [] as string[],
       is_available: true,
@@ -354,6 +357,7 @@ export default function SettingsPage() {
         studyLevel: authUser.study_level?.toString() || prev.studyLevel,
         department: authUser.department || prev.department,
         faculty: authUser.faculty || prev.faculty,
+        governorate: authUser.governorate || prev.governorate,
         bio: authUser.bio || prev.bio,
         skills: Array.isArray(authUser.skills) ? authUser.skills : prev.skills,
         is_available: authUser.is_available ?? prev.is_available,
@@ -443,7 +447,7 @@ export default function SettingsPage() {
   const planData = {
     name: PLAN_NAMES[userPlan],
     price: userPlan === 'free' ? "Free Forever" : userPlan === 'starter' ? "$29/month" : userPlan === 'professional' ? "$79/month" : "$199/month",
-    status: "Active 31/12",
+    status: "Active",
     borderColor: planBorderColor,
     features: PLAN_FEATURES[userPlan],
     limits: {
@@ -506,6 +510,7 @@ export default function SettingsPage() {
           studyLevel: result.data.study_level?.toString() || "",
           department: result.data.department || "",
           faculty: result.data.faculty || "",
+          governorate: result.data.governorate || "",
           bio: result.data.bio || "",
           skills: Array.isArray(result.data.skills) ? result.data.skills : [],
           is_available: result.data.is_available ?? true,
@@ -650,7 +655,7 @@ export default function SettingsPage() {
                     </Avatar>
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Profile Picture</p>
-                      <p className="text-xs text-muted-foreground italic">Your profile picture is synchronized with your authentication provider and cannot be changed manually Through our platform.</p>
+                      <p className="text-xs text-muted-foreground italic">Your profile picture is synchronized with your authentication provider (Google) and cannot be changed manually Through our platform.</p>
                     </div>
                   </div>
 
@@ -688,6 +693,24 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="governorate">Governorate</Label>
+                        <Select 
+                          value={profile.governorate} 
+                          onValueChange={(value) => setProfile({ ...profile, governorate: value })}
+                          disabled
+                        >
+                          <SelectTrigger id="governorate">
+                            <SelectValue placeholder="Select governorate" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {EGYPTIAN_GOVERNORATES.map((gov) => (
+                              <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="faculty">Faculty</Label>
                         <Select 
                           value={profile.faculty} 
@@ -705,41 +728,46 @@ export default function SettingsPage() {
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="studyLevel">Study Level</Label>
-                        <Select 
-                          value={profile.studyLevel} 
-                          onValueChange={(value) => setProfile({ ...profile, studyLevel: value })}
-                          disabled
-                        >
-                          <SelectTrigger id="studyLevel">
-                            <SelectValue placeholder="Select level" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">Level 1</SelectItem>
-                            <SelectItem value="2">Level 2</SelectItem>
-                            <SelectItem value="3">Level 3</SelectItem>
-                            <SelectItem value="4">Level 4</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="department">Department</Label>
-                        <Select 
-                          value={profile.department || undefined} 
-                          onValueChange={(value) => setProfile({ ...profile, department: value })}
-                          disabled
-                        >
-                          <SelectTrigger id="department">
-                            <SelectValue placeholder="Select dept" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
-                              <SelectItem key={code} value={code}>{name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      {/* Only show Study Level and Department for FCDS faculty */}
+                      {profile.faculty && profile.faculty.toLowerCase() === FCDS_FACULTY_NAME.toLowerCase() && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="studyLevel">Study Level</Label>
+                            <Select 
+                              value={profile.studyLevel} 
+                              onValueChange={(value) => setProfile({ ...profile, studyLevel: value })}
+                              disabled
+                            >
+                              <SelectTrigger id="studyLevel">
+                                <SelectValue placeholder="Select level" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">Level 1</SelectItem>
+                                <SelectItem value="2">Level 2</SelectItem>
+                                <SelectItem value="3">Level 3</SelectItem>
+                                <SelectItem value="4">Level 4</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="department">Department</Label>
+                            <Select 
+                              value={profile.department || undefined} 
+                              onValueChange={(value) => setProfile({ ...profile, department: value })}
+                              disabled
+                            >
+                              <SelectTrigger id="department">
+                                <SelectValue placeholder="Select dept" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
+                                  <SelectItem key={code} value={code}>{name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </>
+                      )}
 
                       <div className="md:col-span-2">
                         <p className="text-xs text-muted-foreground italic">
@@ -1294,5 +1322,3 @@ export default function SettingsPage() {
     </div>
   )
 }
-
-
