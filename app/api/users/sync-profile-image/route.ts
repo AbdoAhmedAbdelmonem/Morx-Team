@@ -26,11 +26,11 @@ export async function POST(request: NextRequest) {
       .from('users')
       .update({ profile_image })
       .eq('auth_user_id', user.id)
-      .select('auth_user_id, first_name, last_name, email, profile_image, study_level, department, faculty, bio, skills, is_available, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, study_level, department, faculty, governorate, bio, skills, is_available, created_at')
       .single();
 
     if (error) {
-      console.error('[Sync Profile Image] Error:', error);
+      // console.error('[Sync Profile Image] Error:', error);
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Failed to update profile image' },
         { status: 500 }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       data
     });
   } catch (error) {
-    console.error('[Sync Profile Image] Error:', error);
+    // console.error('[Sync Profile Image] Error:', error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: 'Internal server error' },
       { status: 500 }
