@@ -547,6 +547,7 @@ Select the BEST teams (3-8) that would be ideal for this candidate.`
               <Users className="size-16 text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">No talent found</h3>
               <p className="text-muted-foreground">Try adjusting your filters to find more members.</p>
+              <p className="text-muted-foreground">this maybe cause of there is no available talent in your faculty</p>
             </div>
           ) : (
             <div data-tutorial="talent-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -592,9 +593,16 @@ Select the BEST teams (3-8) that would be ideal for this candidate.`
                              member.plan === 'starter' ? 'STR' : 'FREE'}
                           </Badge>
                         </div>
-                        <CardDescription className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
-                          <Star className="size-2.5 fill-primary/20" /> 
-                          {(member.department && DEPARTMENT_NAMES[member.department]) || member.department || "General"}
+                        <CardDescription className="flex flex-col gap-0.5 mt-0.5 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Star className="size-2.5 fill-primary/20" /> 
+                            {(member.department && DEPARTMENT_NAMES[member.department])}
+                          </div>
+                          {member.governorate && member.faculty && (
+                            <div className="flex items-center gap-1 text-[11px]">
+                              {member.faculty} | {member.governorate}
+                            </div>
+                          )}
                         </CardDescription>
                       </div>
                     </div>
@@ -765,6 +773,10 @@ Select the BEST teams (3-8) that would be ideal for this candidate.`
                   <div className="text-xl font-bold">{selectedMemberDetails?.first_name} {selectedMemberDetails?.last_name}</div>
                   <div className="text-sm text-muted-foreground font-normal">
                     {(selectedMemberDetails?.department && DEPARTMENT_NAMES[selectedMemberDetails?.department]) || selectedMemberDetails?.department || "General"} • Level {selectedMemberDetails?.study_level || "?"}
+                    <br></br>
+                    {selectedMemberDetails?.governorate && selectedMemberDetails?.faculty && (
+                      <> {selectedMemberDetails.faculty} | {selectedMemberDetails.governorate}</>
+                    )}
                   </div>
                 </div>
               </DialogTitle>
