@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Get profile data from request
     const body = await request.json();
-    const { first_name, last_name, password, study_level, department, faculty } = body;
+    const { first_name, last_name, password, governorate, study_level, department, faculty } = body;
 
     if (!first_name || !last_name) {
       return NextResponse.json<ApiResponse>(
@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
       email, 
       profile_image: profileImage || '',
       auth_user_id: auth_user_id,  // UUID from Supabase Auth
+      governorate,
       study_level,
       department,
       faculty
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
     const { data: newUser, error: insertError } = await supabaseAdmin
       .from('users')
       .insert(userData)
-      .select('auth_user_id, first_name, last_name, email, profile_image, study_level, department, faculty, created_at')
+      .select('auth_user_id, first_name, last_name, email, profile_image, governorate, study_level, department, faculty, created_at')
       .single();
 
     if (insertError) {
