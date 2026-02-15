@@ -20,6 +20,7 @@ export interface User {
   study_level?: number | null;
   department?: string | null;
   faculty?: string | null;
+  governorate?: string | null;
   bio?: string | null;
   skills?: any | null;
   is_available?: boolean;
