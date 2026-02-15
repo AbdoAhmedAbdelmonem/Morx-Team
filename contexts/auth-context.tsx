@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           study_level: userData.study_level,
           department: userData.department,
           faculty: userData.faculty,
+          governorate: userData.governorate,
           bio: userData.bio,
           skills: userData.skills,
           is_available: userData.is_available,
@@ -81,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           study_level: userData.study_level,
           department: userData.department,
           faculty: userData.faculty,
+          governorate: userData.governorate,
           bio: userData.bio,
           skills: userData.skills,
           is_available: userData.is_available,
@@ -139,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // specifically protect these fields
         department: resolvedNewVal.department ?? prev.department,
         faculty: resolvedNewVal.faculty ?? prev.faculty,
+        governorate: resolvedNewVal.governorate ?? prev.governorate,
         study_level: resolvedNewVal.study_level ?? prev.study_level,
         bio: resolvedNewVal.bio ?? prev.bio,
         skills: resolvedNewVal.skills ?? prev.skills,
